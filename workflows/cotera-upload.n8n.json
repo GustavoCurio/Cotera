@@ -1,0 +1,35 @@
+{
+  "name": "Cotera · receber proposta e devolver conferência",
+  "nodes": [
+    {
+      "parameters": {"httpMethod": "POST", "path": "cotera-proposal", "responseMode": "responseNode", "options": {"binaryPropertyName": "data"}},
+      "id": "input-proposal", "name": "Receber PDF", "type": "n8n-nodes-base.webhook", "typeVersion": 2.1,
+      "position": [260, 300], "webhookId": "8e1270bf-9d71-47f9-9569-f71f379ad3f9"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ 'http://cotera-api:8005/requests/' + encodeURIComponent($json.query.request_id) + '/proposals' }}",
+        "sendBody": true, "contentType": "multipart-form-data",
+        "bodyParameters": {"parameters": [
+          {"parameterType": "formBinaryData", "name": "file", "inputDataFieldName": "data"},
+          {"name": "mode", "value": "={{ $json.query.mode || 'local' }}"},
+          {"name": "approve_external_processing", "value": "={{ $json.query.approve_external_processing === 'true' ? 'true' : 'false' }}"}
+        ]},
+        "options": {"timeout": 45000, "response": {"response": {"fullResponse": true, "neverError": true, "responseFormat": "json"}}}
+      },
+      "id": "call-cotera", "name": "Extrair e registrar no Cotera", "type": "n8n-nodes-base.httpRequest", "typeVersion": 4.2,
+      "position": [540, 300]
+    },
+    {
+      "parameters": {"respondWith": "json", "responseBody": "={{ $json.body }}", "options": {"responseCode": "={{ $json.statusCode }}"}},
+      "id": "return-result", "name": "Responder ao remetente", "type": "n8n-nodes-base.respondToWebhook", "typeVersion": 1.4,
+      "position": [820, 300]
+    }
+  ],
+  "connections": {
+    "Receber PDF": {"main": [[{"node": "Extrair e registrar no Cotera", "type": "main", "index": 0}]]},
+    "Extrair e registrar no Cotera": {"main": [[{"node": "Responder ao remetente", "type": "main", "index": 0}]]}
+  },
+  "settings": {"executionOrder": "v1"}, "active": false, "pinData": {}, "tags": []
+}

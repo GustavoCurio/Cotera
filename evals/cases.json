@@ -1,0 +1,50 @@
+[
+  {
+    "name": "aurora",
+    "text": "COTERA - PROPOSTA COMERCIAL\nFornecedor: Aurora Suprimentos\nReferência: AUR-2401\nMoeda: BRL\nPrazo: 5 dias\nFrete: R$ 45,00\nDesconto: R$ 0,00\nTotal declarado: R$ 1.405,00\nSKU | Quantidade | Unidade | Preço unitário\nPAP-A4 | 20 | un | R$ 32,00\nCAN-AZ | 50 | un | R$ 3,20\nORG-M | 10 | un | R$ 56,00",
+    "eligible": true,
+    "total": "1405.00"
+  },
+  {
+    "name": "prumo",
+    "text": "COTERA - PROPOSTA COMERCIAL\nFornecedor: Prumo Distribuidora\nReferência: PRU-8810\nMoeda: BRL\nPrazo: 8 dias\nFrete: R$ 0,00\nDesconto: R$ 20,00\nTotal declarado: R$ 1.320,00\nSKU | Quantidade | Unidade | Preço unitário\nPAP-A4 | 20 | un | R$ 31,00\nCAN-AZ | 50 | un | R$ 2,80\nORG-M | 10 | un | R$ 58,00",
+    "eligible": true,
+    "total": "1320.00"
+  },
+  {
+    "name": "total_incorreto",
+    "text": "COTERA - PROPOSTA COMERCIAL\nFornecedor: Vértice Comercial\nReferência: VER-1042\nMoeda: BRL\nPrazo: 4 dias\nFrete: R$ 80,00\nDesconto: R$ 0,00\nTotal declarado: R$ 1.290,00\nSKU | Quantidade | Unidade | Preço unitário\nPAP-A4 | 20 | un | R$ 29,00\nCAN-AZ | 50 | un | R$ 3,00\nORG-M | 10 | un | R$ 54,00",
+    "eligible": false,
+    "total": "1350.00"
+  },
+  {
+    "name": "sem_frete",
+    "text": "COTERA - PROPOSTA COMERCIAL\nFornecedor: Aurora Suprimentos\nReferência: AUR-2401\nMoeda: BRL\nPrazo: 5 dias\nDesconto: R$ 0,00\nTotal declarado: R$ 1.405,00\nSKU | Quantidade | Unidade | Preço unitário\nPAP-A4 | 20 | un | R$ 32,00\nCAN-AZ | 50 | un | R$ 3,20\nORG-M | 10 | un | R$ 56,00",
+    "eligible": false,
+    "total": null
+  },
+  {
+    "name": "quantidade_divergente",
+    "text": "COTERA - PROPOSTA COMERCIAL\nFornecedor: Aurora Suprimentos\nReferência: AUR-2401\nMoeda: BRL\nPrazo: 5 dias\nFrete: R$ 45,00\nDesconto: R$ 0,00\nTotal declarado: R$ 1.405,00\nSKU | Quantidade | Unidade | Preço unitário\nPAP-A4 | 19 | un | R$ 32,00\nCAN-AZ | 50 | un | R$ 3,20\nORG-M | 10 | un | R$ 56,00",
+    "eligible": false,
+    "total": "1373.00"
+  },
+  {
+    "name": "moeda_diferente",
+    "text": "COTERA - PROPOSTA COMERCIAL\nFornecedor: Aurora Suprimentos\nReferência: AUR-2401\nMoeda: USD\nPrazo: 5 dias\nFrete: R$ 45,00\nDesconto: R$ 0,00\nTotal declarado: R$ 1.405,00\nSKU | Quantidade | Unidade | Preço unitário\nPAP-A4 | 20 | un | R$ 32,00\nCAN-AZ | 50 | un | R$ 3,20\nORG-M | 10 | un | R$ 56,00",
+    "eligible": false,
+    "total": "1405.00"
+  },
+  {
+    "name": "item_repetido",
+    "text": "COTERA - PROPOSTA COMERCIAL\nFornecedor: Aurora Suprimentos\nReferência: AUR-2401\nMoeda: BRL\nPrazo: 5 dias\nFrete: R$ 45,00\nDesconto: R$ 0,00\nTotal declarado: R$ 1.405,00\nSKU | Quantidade | Unidade | Preço unitário\nPAP-A4 | 20 | un | R$ 32,00\nCAN-AZ | 50 | un | R$ 3,20\nORG-M | 10 | un | R$ 56,00\nCAN-AZ | 50 | un | R$ 3,20",
+    "eligible": false,
+    "total": "1565.00"
+  },
+  {
+    "name": "item_ausente",
+    "text": "COTERA - PROPOSTA COMERCIAL\nFornecedor: Aurora Suprimentos\nReferência: AUR-2401\nMoeda: BRL\nPrazo: 5 dias\nFrete: R$ 45,00\nDesconto: R$ 0,00\nTotal declarado: R$ 1.405,00\nSKU | Quantidade | Unidade | Preço unitário\nPAP-A4 | 20 | un | R$ 32,00\nCAN-AZ | 50 | un | R$ 3,20",
+    "eligible": false,
+    "total": "845.00"
+  }
+]

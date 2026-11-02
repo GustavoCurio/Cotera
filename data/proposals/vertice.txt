@@ -1,0 +1,12 @@
+COTERA - PROPOSTA COMERCIAL
+Fornecedor: Vértice Comercial
+Referência: VER-1042
+Moeda: BRL
+Prazo: 4 dias
+Frete: R$ 80,00
+Desconto: R$ 0,00
+Total declarado: R$ 1.290,00
+SKU | Quantidade | Unidade | Preço unitário
+PAP-A4 | 20 | un | R$ 29,00
+CAN-AZ | 50 | un | R$ 3,00
+ORG-M | 10 | un | R$ 54,00

@@ -1,0 +1,71 @@
+{
+  "method": "parser local e regras; casos sintéticos de desenvolvimento; sem chamada a LLM",
+  "cases": [
+    {
+      "case": "aurora",
+      "expected_eligible": true,
+      "observed_eligible": true,
+      "expected_total": "1405.00",
+      "observed_total": "1405.00",
+      "passed": true
+    },
+    {
+      "case": "prumo",
+      "expected_eligible": true,
+      "observed_eligible": true,
+      "expected_total": "1320.00",
+      "observed_total": "1320.00",
+      "passed": true
+    },
+    {
+      "case": "total_incorreto",
+      "expected_eligible": false,
+      "observed_eligible": false,
+      "expected_total": "1350.00",
+      "observed_total": "1350.00",
+      "passed": true
+    },
+    {
+      "case": "sem_frete",
+      "expected_eligible": false,
+      "observed_eligible": false,
+      "expected_total": null,
+      "observed_total": null,
+      "passed": true
+    },
+    {
+      "case": "quantidade_divergente",
+      "expected_eligible": false,
+      "observed_eligible": false,
+      "expected_total": "1373.00",
+      "observed_total": "1373.00",
+      "passed": true
+    },
+    {
+      "case": "moeda_diferente",
+      "expected_eligible": false,
+      "observed_eligible": false,
+      "expected_total": "1405.00",
+      "observed_total": "1405.00",
+      "passed": true
+    },
+    {
+      "case": "item_repetido",
+      "expected_eligible": false,
+      "observed_eligible": false,
+      "expected_total": "1565.00",
+      "observed_total": "1565.00",
+      "passed": true
+    },
+    {
+      "case": "item_ausente",
+      "expected_eligible": false,
+      "observed_eligible": false,
+      "expected_total": "845.00",
+      "observed_total": "845.00",
+      "passed": true
+    }
+  ],
+  "passed": 8,
+  "total": 8
+}

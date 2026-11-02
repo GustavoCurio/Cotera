@@ -1,0 +1,57 @@
+services:
+  postgres:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_USER: cotera
+      POSTGRES_DB: cotera
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Defina POSTGRES_PASSWORD no arquivo .env}
+    ports:
+      - "127.0.0.1:5433:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U cotera -d cotera"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+  cotera-api:
+    build: .
+    command: ["python", "-m", "uvicorn", "cotera.api:app", "--host", "0.0.0.0", "--port", "8005"]
+    ports:
+      - "127.0.0.1:8005:8005"
+    environment: &cotera_environment
+      COTERA_DATABASE_URL: postgresql://cotera@postgres:5432/cotera
+      COTERA_DB_PASSWORD: ${POSTGRES_PASSWORD}
+      COTERA_API_KEY: ${COTERA_API_KEY:-}
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      OPENAI_MODEL: ${OPENAI_MODEL:-}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - app_storage:/app/storage
+  cotera-web:
+    build: .
+    ports:
+      - "127.0.0.1:8505:8505"
+    environment: *cotera_environment
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - app_storage:/app/storage
+  n8n:
+    image: docker.n8n.io/n8nio/n8n:stable
+    ports:
+      - "127.0.0.1:5678:5678"
+    environment:
+      GENERIC_TIMEZONE: America/Sao_Paulo
+      TZ: America/Sao_Paulo
+    volumes:
+      - n8n_data:/home/node/.n8n
+    depends_on:
+      - cotera-api
+volumes:
+  postgres_data:
+  app_storage:
+  n8n_data:
