@@ -2,7 +2,7 @@
 
 **Cotações comparáveis. Decisões que deixam rastro.**
 
-🔗 Demo online: (link em breve)
+🔗 **Demo online:** [cotera.streamlit.app](https://cotera.streamlit.app/) (modo local, sem chave de API; clique em "Carregar exemplo")
 
 Receba propostas de fornecedores em PDF, transforme os documentos em dados e compare a mesma cesta de produtos. O Cotera confere quantidades, unidades, frete, desconto, prazo e total antes de liberar o registro da escolha.
 
