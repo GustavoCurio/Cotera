@@ -1,13 +1,12 @@
 """Regressão: demonstração Streamlit sem DATABASE_URL e storage do repo inacessível."""
 
+import inspect
 import os
 
 import pytest
 from streamlit.testing.v1 import AppTest
 
 import cotera.store as store_module
-import inspect
-
 from cotera.demo import DATA, seed_demo
 
 ROOT = DATA.parent

@@ -12,8 +12,9 @@ from pathlib import Path
 _REPO_ROOT = Path(__file__).resolve().parent
 if sys.path[:1] != [str(_REPO_ROOT)]:
     sys.path.insert(0, str(_REPO_ROOT))
-for _name in [name for name in list(sys.modules) if name == "cotera" or name.startswith("cotera.")]:
-    del sys.modules[_name]
+
+# Se o interpretador ainda aponta para uma wheel antiga, recarrega só o pacote local.
+import inspect as _inspect
 
 import streamlit as st
 from pydantic import ValidationError
@@ -25,6 +26,18 @@ from cotera.models import Decision, PurchaseRequest
 from cotera.reports import brl, comparison_csv, report_html, snapshot_json
 from cotera.service import add_document
 from cotera.store import ConflictError, Store, default_sqlite_url
+
+if "scanned" not in _inspect.signature(seed_demo).parameters or not str(
+    Path(seed_demo.__code__.co_filename).resolve()
+).startswith(str(_REPO_ROOT)):
+    for _name in [name for name in list(sys.modules) if name == "cotera" or name.startswith("cotera.")]:
+        del sys.modules[_name]
+    from cotera.demo import DATA, seed_demo
+    from cotera.extraction import ProviderError
+    from cotera.models import Decision, PurchaseRequest
+    from cotera.reports import brl, comparison_csv, report_html, snapshot_json
+    from cotera.service import add_document
+    from cotera.store import ConflictError, Store, default_sqlite_url
 
 st.set_page_config(page_title="Cotera · Mesa de compras", page_icon="◒", layout="wide")
 st.markdown(
