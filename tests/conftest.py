@@ -1,4 +1,5 @@
 """Toda a suíte deve funcionar sem chamadas reais ao provedor."""
+
 import os
 import shutil
 import subprocess
@@ -22,9 +23,17 @@ def document():
 
 @pytest.fixture(autouse=True)
 def no_external_credentials(monkeypatch):
-    for name in ["OPENAI_API_KEY", "OPENAI_MODEL", "COTERA_API_KEY", "COTERA_DB_PASSWORD",
-                 "COTERA_LLM_MAX_ATTEMPTS", "COTERA_LLM_MAX_TOKENS", "COTERA_LLM_MAX_COST_USD",
-                 "COTERA_LLM_PRICING_PATH", "COTERA_OCR_TIMEOUT_SECONDS"]:
+    for name in [
+        "OPENAI_API_KEY",
+        "OPENAI_MODEL",
+        "COTERA_API_KEY",
+        "COTERA_DB_PASSWORD",
+        "COTERA_LLM_MAX_ATTEMPTS",
+        "COTERA_LLM_MAX_TOKENS",
+        "COTERA_LLM_MAX_COST_USD",
+        "COTERA_LLM_PRICING_PATH",
+        "COTERA_OCR_TIMEOUT_SECONDS",
+    ]:
         monkeypatch.delenv(name, raising=False)
 
 

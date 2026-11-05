@@ -1,4 +1,5 @@
 """Verificação dos limites, evidências, cálculos, transações, API e interface."""
+
 from copy import deepcopy
 from decimal import Decimal
 from io import BytesIO
@@ -32,20 +33,26 @@ from tests.fakes import FakeResponses
 
 def test_same_document_deduplicates_without_changing_version(store, document):
     identifier = store.create(demo_request())["id"]
-    first = add_document(store, identifier, (DATA/"proposals/aurora.txt").read_bytes(), "a.txt")
+    first = add_document(store, identifier, (DATA / "proposals/aurora.txt").read_bytes(), "a.txt")
     before = store.get(identifier)["version"]
-    second = add_document(store, identifier, (DATA/"proposals/aurora.txt").read_bytes(), "renamed.txt", "ai", consent=True)
+    second = add_document(
+        store, identifier, (DATA / "proposals/aurora.txt").read_bytes(), "renamed.txt", "ai", consent=True
+    )
     assert first["created"] and not second["created"]
     assert first["id"] == second["id"]
     assert store.get(identifier)["version"] == before
     assert len(Store(store.url).get(identifier)["proposals"]) == 1
 
 
-
 def test_decision_conflict_ineligible_and_history(store):
     identifier = seed_demo(store)
     snapshot = store.get(identifier)
-    body = Decision(proposal_id=snapshot["lowest_cost_ids"][0], expected_version=snapshot["version"], actor="Operador de teste", reason="O custo atende ao orçamento e o prazo foi considerado.")
+    body = Decision(
+        proposal_id=snapshot["lowest_cost_ids"][0],
+        expected_version=snapshot["version"],
+        actor="Operador de teste",
+        reason="O custo atende ao orçamento e o prazo foi considerado.",
+    )
     first = store.decide(identifier, body)
     assert first["total"] == "1320.00"
     with pytest.raises(ConflictError):
@@ -61,7 +68,6 @@ def test_decision_conflict_ineligible_and_history(store):
         store.get("missing")
 
 
-
 def test_transaction_rollback_and_sql_is_data(store):
     malicious = demo_request().model_copy(update={"title": "'; DROP TABLE purchases; --"})
     identifier = store.create(malicious)["id"]
@@ -73,33 +79,45 @@ def test_transaction_rollback_and_sql_is_data(store):
     assert store.get(identifier)["version"] == 1
 
 
-
 def test_concurrent_decisions_only_one_wins(store):
     identifier = seed_demo(store)
     snapshot = store.get(identifier)
-    decision = Decision(proposal_id=snapshot["lowest_cost_ids"][0], expected_version=snapshot["version"], actor="Teste", reason="Conferência concorrente da mesma fotografia.")
+    decision = Decision(
+        proposal_id=snapshot["lowest_cost_ids"][0],
+        expected_version=snapshot["version"],
+        actor="Teste",
+        reason="Conferência concorrente da mesma fotografia.",
+    )
+
     def submit():
         try:
             store.decide(identifier, decision)
             return "saved"
         except ConflictError:
             return "conflict"
+
     with ThreadPoolExecutor(max_workers=2) as pool:
         outcomes = list(pool.map(lambda _: submit(), range(2)))
     assert sorted(outcomes) == ["conflict", "saved"]
     assert len(store.get(identifier)["decisions"]) == 1
 
 
-
 def test_proposal_limit_and_nonexistent_choice(store, document):
     identifier = store.create(demo_request())["id"]
     for i in range(10):
-        add_document(store, identifier, ("\n".join(document.lines)+f"\nNota: {i}").encode(), f"quote{i}.txt")
+        add_document(store, identifier, ("\n".join(document.lines) + f"\nNota: {i}").encode(), f"quote{i}.txt")
     with pytest.raises(ValueError, match="dez propostas"):
-        add_document(store, identifier, ("\n".join(document.lines)+"\nNota: 11").encode(), "quote11.txt")
+        add_document(store, identifier, ("\n".join(document.lines) + "\nNota: 11").encode(), "quote11.txt")
     with pytest.raises(ValueError):
-        store.decide(identifier, Decision(proposal_id="f"*32, expected_version=11, actor="Teste", reason="Fornecedor inexistente nesta comparação."))
-
+        store.decide(
+            identifier,
+            Decision(
+                proposal_id="f" * 32,
+                expected_version=11,
+                actor="Teste",
+                reason="Fornecedor inexistente nesta comparação.",
+            ),
+        )
 
 
 @pytest.mark.parametrize("failure", ["directory", "journal", "database"])
@@ -141,7 +159,6 @@ def test_default_sqlite_falls_back_to_writable_tempdir(tmp_path, monkeypatch, fa
     assert len(demo.get(seed_demo(demo))["proposals"]) == 3
 
 
-
 def test_explicit_sqlite_configuration_does_not_silently_fall_back(tmp_path, monkeypatch):
     blocked = tmp_path / "not-a-directory"
     blocked.write_text("Configuração explícita inválida.")
@@ -153,17 +170,20 @@ def test_explicit_sqlite_configuration_does_not_silently_fall_back(tmp_path, mon
         Store()
 
 
-
 @pytest.mark.postgres
 def test_postgresql_persistence_and_decision(document, postgres_store):
     pg = postgres_store
     identifier = pg.create(demo_request())["id"]
-    result = add_document(pg, identifier, (DATA/"proposals/aurora.pdf").read_bytes(), "aurora.pdf")
+    result = add_document(pg, identifier, (DATA / "proposals/aurora.pdf").read_bytes(), "aurora.pdf")
     snapshot = pg.get(identifier)
     assert snapshot["eligible_count"] == 1
-    choice = Decision(proposal_id=result["id"], expected_version=snapshot["version"], actor="CI PostgreSQL", reason="Extração, comparação e persistência no PostgreSQL.")
+    choice = Decision(
+        proposal_id=result["id"],
+        expected_version=snapshot["version"],
+        actor="CI PostgreSQL",
+        reason="Extração, comparação e persistência no PostgreSQL.",
+    )
     pg.decide(identifier, choice)
     with pytest.raises(ConflictError):
         pg.decide(identifier, choice)
     assert len(Store(pg.url).get(identifier)["decisions"]) == 1
-

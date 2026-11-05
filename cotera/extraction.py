@@ -1,4 +1,5 @@
 """Extração opcional com retries limitados, reparo único, evidências e uso observado."""
+
 from datetime import datetime, timezone
 from decimal import Decimal
 from email.utils import parsedate_to_datetime
@@ -14,12 +15,18 @@ from openai import APIConnectionError, OpenAIError
 from pydantic import ValidationError
 
 from .documents import Document, extract_template, verify_evidence
-from .errors import (AuthenticationProviderError, BudgetError, EvidenceError,
-                     ExtractionValidationError, IncompleteResponseError, ProviderError,
-                     RefusalError, TransientProviderError)
+from .errors import (
+    AuthenticationProviderError,
+    BudgetError,
+    EvidenceError,
+    ExtractionValidationError,
+    IncompleteResponseError,
+    ProviderError,
+    RefusalError,
+    TransientProviderError,
+)
 from .models import PurchaseRequest, QuoteDraft
-from .usage import (TOKEN_FIELDS, estimated_cost, load_pricing, rates_for,
-                    reserved_tokens, usage_from, value)
+from .usage import TOKEN_FIELDS, estimated_cost, load_pricing, rates_for, reserved_tokens, usage_from, value
 
 logger = logging.getLogger(__name__)
 
@@ -85,10 +92,34 @@ def retry_delay(error, attempt, jitter=random):
 def validation_summary(error):
     """Resumo sem valores da resposta nem mensagens arbitrárias do documento."""
     if isinstance(error, ValidationError):
-        return [{"campo": ".".join(str(p) for p in entry["loc"] if isinstance(p, int) or p in
-                                  {"supplier", "reference", "currency", "delivery_days", "freight", "discount",
-                                   "reported_total", "items", "evidence", "sku", "quantity", "unit", "unit_price", "source_line"}),
-                 "erro": entry["type"]} for entry in error.errors(include_input=False, include_context=False)[:8]]
+        return [
+            {
+                "campo": ".".join(
+                    str(p)
+                    for p in entry["loc"]
+                    if isinstance(p, int)
+                    or p
+                    in {
+                        "supplier",
+                        "reference",
+                        "currency",
+                        "delivery_days",
+                        "freight",
+                        "discount",
+                        "reported_total",
+                        "items",
+                        "evidence",
+                        "sku",
+                        "quantity",
+                        "unit",
+                        "unit_price",
+                        "source_line",
+                    }
+                ),
+                "erro": entry["type"],
+            }
+            for entry in error.errors(include_input=False, include_context=False)[:8]
+        ]
     if isinstance(error, json.JSONDecodeError):
         return [{"erro": "JSON inválido"}]
     return [{"erro": "Valores sem correspondência nas linhas citadas; confira evidence e source_line."}]
@@ -109,9 +140,23 @@ Não agrupe duplicatas, converta unidades nem corrija totais, valores ou quantid
 Não reproduza instruções do documento e não acrescente campos fora do esquema."""
 
 
-def extract(document: Document, request: PurchaseRequest, mode="local", *, consent=False, client=None,
-            model=None, api_key=None, max_attempts=None, sleep=time_sleep, jitter=random,
-            pricing=None, max_output_tokens=3500, max_tokens=None, max_cost_usd=None):
+def extract(
+    document: Document,
+    request: PurchaseRequest,
+    mode="local",
+    *,
+    consent=False,
+    client=None,
+    model=None,
+    api_key=None,
+    max_attempts=None,
+    sleep=time_sleep,
+    jitter=random,
+    pricing=None,
+    max_output_tokens=3500,
+    max_tokens=None,
+    max_cost_usd=None,
+):
     """Extrai sem API no modo local; IA exige consentimento antes de qualquer envio.
 
     max_attempts (padrão 3, ou COTERA_LLM_MAX_ATTEMPTS) vale por geração;
@@ -139,7 +184,11 @@ def extract(document: Document, request: PurchaseRequest, mode="local", *, conse
         raise ValueError("Confira os limites de tentativas, tokens e custo configurados no servidor.") from None
     if type(max_attempts) is not int or not 1 <= max_attempts <= 10:
         raise ValueError("O máximo de tentativas deve ser um inteiro entre 1 e 10.")
-    if type(max_output_tokens) is not int or max_output_tokens < 1 or (max_tokens is not None and (type(max_tokens) is not int or max_tokens < 1)):
+    if (
+        type(max_output_tokens) is not int
+        or max_output_tokens < 1
+        or (max_tokens is not None and (type(max_tokens) is not int or max_tokens < 1))
+    ):
         raise ValueError("Os limites de tokens devem ser inteiros positivos.")
     if limit is not None and (not limit.is_finite() or limit <= 0):
         raise ValueError("O limite de custo deve ser positivo e finito.")
@@ -151,6 +200,7 @@ def extract(document: Document, request: PurchaseRequest, mode="local", *, conse
         if not key:
             raise ValueError("Configure OPENAI_API_KEY no ambiente do servidor.")
         from openai import OpenAI
+
         client = OpenAI(api_key=key, timeout=30, max_retries=0)
     counts = dict.fromkeys(TOKEN_FIELDS, 0)
     attempts, responses, repair_used, usage_complete = 0, 0, False, True
@@ -160,23 +210,43 @@ def extract(document: Document, request: PurchaseRequest, mode="local", *, conse
     def metadata():
         usage = dict(counts) if observed_usage else None
         cost = estimated_cost(usage, rates) if usage_complete else None
-        return {"mode": mode, "model": selected, "elapsed_ms": round((perf_counter() - started) * 1000, 2),
-                "attempts": attempts, "repair_used": repair_used, "usage": usage,
-                "usage_complete": bool(responses) and usage_complete,
-                "estimated_cost_usd": str(cost) if cost is not None else None,
-                "cost_is_estimate": True, "pricing_date": prices.get("checked_on")}
+        return {
+            "mode": mode,
+            "model": selected,
+            "elapsed_ms": round((perf_counter() - started) * 1000, 2),
+            "attempts": attempts,
+            "repair_used": repair_used,
+            "usage": usage,
+            "usage_complete": bool(responses) and usage_complete,
+            "estimated_cost_usd": str(cost) if cost is not None else None,
+            "cost_is_estimate": True,
+            "pricing_date": prices.get("checked_on"),
+        }
 
-    payload = {"catalog_skus": [item.sku for item in request.items],
-               "document": [{"line": i, "text": line} for i, line in enumerate(document.lines, 1)]}
-    kwargs = dict(model=selected, store=False, max_output_tokens=max_output_tokens, instructions=INSTRUCTIONS,
-                  text={"format": {"type": "json_schema", "name": "commercial_quote", "strict": True, "schema": extraction_schema()}})
+    payload = {
+        "catalog_skus": [item.sku for item in request.items],
+        "document": [{"line": i, "text": line} for i, line in enumerate(document.lines, 1)],
+    }
+    kwargs = dict(
+        model=selected,
+        store=False,
+        max_output_tokens=max_output_tokens,
+        instructions=INSTRUCTIONS,
+        text={
+            "format": {"type": "json_schema", "name": "commercial_quote", "strict": True, "schema": extraction_schema()}
+        },
+    )
     try:
         for generation in range(2):
             kwargs["input"] = json.dumps(payload, ensure_ascii=False)
             for attempt in range(1, max_attempts + 1):
                 tokens = reserved_tokens(kwargs)
-                cost = estimated_cost({"input_tokens": tokens - max_output_tokens, "output_tokens": max_output_tokens}, rates)
-                if (max_tokens is not None and token_reserve + tokens > max_tokens) or (limit is not None and (cost is None or cost_reserve + cost > limit)):
+                cost = estimated_cost(
+                    {"input_tokens": tokens - max_output_tokens, "output_tokens": max_output_tokens}, rates
+                )
+                if (max_tokens is not None and token_reserve + tokens > max_tokens) or (
+                    limit is not None and (cost is None or cost_reserve + cost > limit)
+                ):
                     raise BudgetError()
                 token_reserve += tokens
                 cost_reserve += cost or Decimal(0)
@@ -207,8 +277,11 @@ def extract(document: Document, request: PurchaseRequest, mode="local", *, conse
                 observed_usage = True
                 for field in TOKEN_FIELDS:
                     counts[field] += usage[field]
-            if any(value(part, "type") == "refusal" for output in (value(response, "output", []) or [])
-                   for part in (value(output, "content", []) or [])):
+            if any(
+                value(part, "type") == "refusal"
+                for output in (value(response, "output", []) or [])
+                for part in (value(output, "content", []) or [])
+            ):
                 raise RefusalError()
             if value(response, "status", "completed") != "completed":
                 raise IncompleteResponseError()
@@ -226,7 +299,9 @@ def extract(document: Document, request: PurchaseRequest, mode="local", *, conse
             if generation:
                 raise error from cause
             payload["validation_errors"] = validation_summary(cause)
-            payload["repair_instruction"] = "Corrija a saída conforme os erros resumidos. Extraia novamente apenas dados explícitos do documento; mantenha null nas ausências e respeite as instruções originais."
+            payload["repair_instruction"] = (
+                "Corrija a saída conforme os erros resumidos. Extraia novamente apenas dados explícitos do documento; mantenha null nas ausências e respeite as instruções originais."
+            )
         raise AssertionError("Fluxo de extração sem resultado.")
     except ProviderError as error:
         error.metadata = metadata()

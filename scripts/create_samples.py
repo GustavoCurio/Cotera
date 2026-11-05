@@ -1,4 +1,5 @@
 """Reproduz propostas fictícias em TXT/PDF e casos de conferência, sem dados externos."""
+
 from pathlib import Path
 import json
 from reportlab.lib import colors
@@ -19,13 +20,25 @@ def create():
     target.mkdir(parents=True, exist_ok=True)
     texts = {}
     for slug, supplier, reference, days, prices, freight, discount, total in PROPOSALS:
-        lines = ["COTERA - PROPOSTA COMERCIAL", f"Fornecedor: {supplier}", f"Referência: {reference}", "Moeda: BRL",
-                 f"Prazo: {days} dias", f"Frete: R$ {freight}", f"Desconto: R$ {discount}", f"Total declarado: R$ {total}",
-                 "SKU | Quantidade | Unidade | Preço unitário", f"PAP-A4 | 20 | un | R$ {prices[0]}",
-                 f"CAN-AZ | 50 | un | R$ {prices[1]}", f"ORG-M | 10 | un | R$ {prices[2]}"]
+        lines = [
+            "COTERA - PROPOSTA COMERCIAL",
+            f"Fornecedor: {supplier}",
+            f"Referência: {reference}",
+            "Moeda: BRL",
+            f"Prazo: {days} dias",
+            f"Frete: R$ {freight}",
+            f"Desconto: R$ {discount}",
+            f"Total declarado: R$ {total}",
+            "SKU | Quantidade | Unidade | Preço unitário",
+            f"PAP-A4 | 20 | un | R$ {prices[0]}",
+            f"CAN-AZ | 50 | un | R$ {prices[1]}",
+            f"ORG-M | 10 | un | R$ {prices[2]}",
+        ]
         text = "\n".join(lines)
         texts[slug] = text
-        (target / f"{slug}.txt").write_text(text + "\n\nFornecedor, referência e condições fictícios, criados para demonstração.\n", encoding="utf-8")
+        (target / f"{slug}.txt").write_text(
+            text + "\n\nFornecedor, referência e condições fictícios, criados para demonstração.\n", encoding="utf-8"
+        )
         pdf = canvas.Canvas(str(target / f"{slug}.pdf"), pagesize=A4, invariant=1)
         pdf.setTitle(f"{supplier} · proposta fictícia")
         pdf.setFillColor(colors.HexColor("#174d42"))
@@ -44,11 +57,36 @@ def create():
         {"name": "aurora", "text": texts["aurora"], "eligible": True, "total": "1405.00"},
         {"name": "prumo", "text": texts["prumo"], "eligible": True, "total": "1320.00"},
         {"name": "total_incorreto", "text": texts["vertice"], "eligible": False, "total": "1350.00"},
-        {"name": "sem_frete", "text": texts["aurora"].replace("Frete: R$ 45,00\n", ""), "eligible": False, "total": None},
-        {"name": "quantidade_divergente", "text": texts["aurora"].replace("PAP-A4 | 20", "PAP-A4 | 19"), "eligible": False, "total": "1373.00"},
-        {"name": "moeda_diferente", "text": texts["aurora"].replace("Moeda: BRL", "Moeda: USD"), "eligible": False, "total": "1405.00"},
-        {"name": "item_repetido", "text": texts["aurora"] + "\nCAN-AZ | 50 | un | R$ 3,20", "eligible": False, "total": "1565.00"},
-        {"name": "item_ausente", "text": texts["aurora"].replace("\nORG-M | 10 | un | R$ 56,00", ""), "eligible": False, "total": "845.00"},
+        {
+            "name": "sem_frete",
+            "text": texts["aurora"].replace("Frete: R$ 45,00\n", ""),
+            "eligible": False,
+            "total": None,
+        },
+        {
+            "name": "quantidade_divergente",
+            "text": texts["aurora"].replace("PAP-A4 | 20", "PAP-A4 | 19"),
+            "eligible": False,
+            "total": "1373.00",
+        },
+        {
+            "name": "moeda_diferente",
+            "text": texts["aurora"].replace("Moeda: BRL", "Moeda: USD"),
+            "eligible": False,
+            "total": "1405.00",
+        },
+        {
+            "name": "item_repetido",
+            "text": texts["aurora"] + "\nCAN-AZ | 50 | un | R$ 3,20",
+            "eligible": False,
+            "total": "1565.00",
+        },
+        {
+            "name": "item_ausente",
+            "text": texts["aurora"].replace("\nORG-M | 10 | un | R$ 56,00", ""),
+            "eligible": False,
+            "total": "845.00",
+        },
     ]
     (ROOT / "evals").mkdir(exist_ok=True)
     (ROOT / "evals" / "cases.json").write_text(json.dumps(cases, ensure_ascii=False, indent=2), encoding="utf-8")

@@ -1,4 +1,5 @@
 """Demonstração, comparação, auditoria de PDF e avaliação pelo terminal."""
+
 import argparse
 import json
 from pathlib import Path
@@ -23,7 +24,11 @@ def main():
     if args.command == "demo":
         store = Store()
         result = store.get(seed_demo(store))
-        print(json.dumps({k: result[k] for k in ["id", "version", "eligible_count", "lowest_cost"]}, ensure_ascii=False, indent=2))
+        print(
+            json.dumps(
+                {k: result[k] for k in ["id", "version", "eligible_count", "lowest_cost"]}, ensure_ascii=False, indent=2
+            )
+        )
     elif args.command == "evaluate":
         result = evaluate()
         args.output.parent.mkdir(parents=True, exist_ok=True)
@@ -31,12 +36,22 @@ def main():
         print(f"{result['passed']}/{result['total']} casos atendidos · {args.output}")
     else:
         from .documents import MAX_BYTES
+
         with args.file.open("rb") as source:
             content = source.read(MAX_BYTES + 1)
         document = read_document(content, args.file.name)
         draft, _ = extract(document, demo_request())
-        print(json.dumps({"document": document.to_dict(), "draft": draft.model_dump(mode="json"),
-                          "audit": audit_quote(demo_request(), draft, document)}, ensure_ascii=False, indent=2))
+        print(
+            json.dumps(
+                {
+                    "document": document.to_dict(),
+                    "draft": draft.model_dump(mode="json"),
+                    "audit": audit_quote(demo_request(), draft, document),
+                },
+                ensure_ascii=False,
+                indent=2,
+            )
+        )
 
 
 if __name__ == "__main__":

@@ -1,4 +1,5 @@
 """OCR real sem API; falhas e orçamento são exercitados também sem Tesseract."""
+
 from io import BytesIO
 import json
 import shutil
@@ -21,8 +22,6 @@ from cotera.store import Store
 from scripts.create_scanned_samples import generate, generate_evaluation
 
 SCANNED = DATA / "scanned"
-
-
 
 
 def pdf_bytes(*paths, blank=False):
@@ -54,10 +53,13 @@ def test_scanned_fixtures_are_image_only_and_reproducible(tmp_path):
 
 @pytest.mark.ocr
 @pytest.mark.slow
-@pytest.mark.parametrize("name,supplier,total", [
-    ("aurora_escaneada.pdf", "Aurora Suprimentos", "1405.00"),
-    ("prumo_ruido_rotacao.pdf", "Prumo Distribuidora", "1320.00"),
-])
+@pytest.mark.parametrize(
+    "name,supplier,total",
+    [
+        ("aurora_escaneada.pdf", "Aurora Suprimentos", "1405.00"),
+        ("prumo_ruido_rotacao.pdf", "Prumo Distribuidora", "1320.00"),
+    ],
+)
 def test_ocr_local_parser_persistence_evidence_and_human_review(require_ocr, tmp_path, name, supplier, total):
     path = SCANNED / name
     store = Store("sqlite:///" + str(tmp_path / "quotes.sqlite3"))
@@ -84,8 +86,12 @@ def test_ocr_local_parser_persistence_evidence_and_human_review(require_ocr, tmp
     assert all("|" in document.lines[item.source_line - 1] for item in draft.items)
     assert json.loads(snapshot_json(snapshot))["proposals"][0]["document"]["pages"] == [page]
     assert "OCR" in report_html(snapshot).decode() and "OCR" in comparison_csv(snapshot).decode("utf-8-sig")
-    decision = Decision(proposal_id=result["id"], expected_version=snapshot["version"],
-                        actor="Revisor local", reason="Valores conferidos no documento original e prazo aceito.")
+    decision = Decision(
+        proposal_id=result["id"],
+        expected_version=snapshot["version"],
+        actor="Revisor local",
+        reason="Valores conferidos no documento original e prazo aceito.",
+    )
     with pytest.raises(ValueError, match="revisão humana"):
         store.decide(identifier, decision)
     assert store.get(identifier)["version"] == snapshot["version"]
@@ -104,6 +110,7 @@ def test_scanned_blank_remains_rejected(require_ocr):
 def test_native_pdf_does_not_call_ocr_and_old_documents_still_compare(monkeypatch):
     def forbidden(*args):
         pytest.fail("PDF textual não deve chamar OCR.")
+
     monkeypatch.setattr(documents, "read_scanned_pages", forbidden)
     path = DATA / "proposals" / "aurora.pdf"
     doc = read_document(path.read_bytes(), path.name)
@@ -119,9 +126,11 @@ def test_native_pdf_does_not_call_ocr_and_old_documents_still_compare(monkeypatc
 def test_mixed_pdf_only_scanned_page_uses_ocr_and_lines_remain_global(require_ocr, monkeypatch):
     indexes_seen = []
     original = documents.read_scanned_pages
+
     def observe(content, indexes):
         indexes_seen.extend(indexes)
         return original(content, indexes)
+
     monkeypatch.setattr(documents, "read_scanned_pages", observe)
     content = pdf_bytes(DATA / "proposals" / "aurora.pdf", SCANNED / "prumo_ruido_rotacao.pdf", blank=True)
     doc = read_document(content, "misto.pdf")
@@ -131,13 +140,14 @@ def test_mixed_pdf_only_scanned_page_uses_ocr_and_lines_remain_global(require_oc
     assert first.start_line == 1 and second.start_line == first.end_line + 1
     assert second.end_line == len(doc.lines)
     assert third.start_line is third.end_line is None
-    assert "Prumo" in "\n".join(doc.lines[second.start_line - 1:second.end_line])
+    assert "Prumo" in "\n".join(doc.lines[second.start_line - 1 : second.end_line])
 
 
 @pytest.mark.ocr
 @pytest.mark.slow
 def test_sparse_native_header_still_triggers_ocr(require_ocr):
     from reportlab.pdfgen.canvas import Canvas
+
     buffer = BytesIO()
     canvas = Canvas(buffer)
     canvas.drawString(10, 820, "COTERA")
@@ -191,16 +201,20 @@ def test_total_ocr_timeout_is_shared_between_pages(monkeypatch):
     elapsed, timeouts = [0.0], []
     monkeypatch.setenv("COTERA_OCR_TIMEOUT_SECONDS", "3")
     monkeypatch.setattr(ocr, "monotonic", lambda: elapsed[0])
+
     def probe(*args, **kwargs):
         elapsed[0] += 0.5
         return subprocess.CompletedProcess(args, 0, stdout="por\neng\n")
+
     monkeypatch.setattr(ocr.subprocess, "run", probe)
+
     def recognize(*args, timeout, **kwargs):
         timeouts.append(timeout)
         if len(timeouts) == 2:
             raise RuntimeError("Tesseract process timeout")
         elapsed[0] += 2
         return "level\tblock_num\tpar_num\tline_num\tconf\ttext\n5\t1\t1\t1\t90\tCotera\n"
+
     monkeypatch.setattr(pytesseract.pytesseract, "run_and_get_output", recognize)
     path = SCANNED / "aurora_escaneada.pdf"
     content = pdf_bytes(path, path)
@@ -212,6 +226,7 @@ def test_total_ocr_timeout_is_shared_between_pages(monkeypatch):
 def test_ocr_never_bypasses_existing_document_limits(monkeypatch):
     def forbidden(*args):
         pytest.fail("Limites precisam ser aplicados antes do OCR.")
+
     monkeypatch.setattr(documents, "read_scanned_pages", forbidden)
     path = SCANNED / "aurora_escaneada.pdf"
     with pytest.raises(ValueError, match="até cinco páginas"):
@@ -232,8 +247,10 @@ def test_ocr_output_obeys_the_same_text_limits(monkeypatch, text):
 @pytest.mark.slow
 def test_scanned_baseline_uses_ocr_without_constructing_openai(require_ocr, tmp_path, monkeypatch):
     from evals import run_llm_eval as runner
+
     def forbidden(*args, **kwargs):
         pytest.fail("Baseline OCR não pode construir cliente de API.")
+
     monkeypatch.setattr("openai.OpenAI", forbidden)
     monkeypatch.setenv("OPENAI_API_KEY", "ficticia-nao-usar")
     output = tmp_path / "baseline.json"
@@ -260,8 +277,12 @@ def test_api_ocr_requires_review_before_decision(require_ocr, tmp_path, monkeypa
         path = SCANNED / "aurora_escaneada.pdf"
         assert client.post(route + "/proposals", files={"file": (path.name, path.read_bytes())}).status_code == 200
         snapshot = client.get(route).json()
-        body = dict(proposal_id=snapshot["proposals"][0]["id"], expected_version=snapshot["version"],
-                    actor="Revisor", reason="Conferência dos valores no PDF original concluída.")
+        body = dict(
+            proposal_id=snapshot["proposals"][0]["id"],
+            expected_version=snapshot["version"],
+            actor="Revisor",
+            reason="Conferência dos valores no PDF original concluída.",
+        )
         assert client.post(route + "/decisions", json=body).status_code == 422
         assert client.post(route + "/decisions", json={**body, "ocr_reviewed": True}).status_code == 201
 
@@ -282,7 +303,9 @@ def test_streamlit_scanned_example_confidence_and_review(require_ocr, tmp_path, 
     assert not ui.exception and any("Texto obtido por OCR" in w.value for w in ui.warning)
     next(s for s in ui.selectbox if s.label == "Proposta escolhida").set_value(scanned["id"])
     next(t for t in ui.text_input if t.label == "Responsável pela escolha").set_value("Revisor")
-    next(t for t in ui.text_area if t.label == "Justificativa").set_value("Valores e prazo conferidos no documento original.")
+    next(t for t in ui.text_area if t.label == "Justificativa").set_value(
+        "Valores e prazo conferidos no documento original."
+    )
     next(b for b in ui.button if b.label == "Registrar decisão").click().run()
     assert any("revisão humana" in e.value for e in ui.error)
     next(c for c in ui.checkbox if c.label.startswith("Revisei no PDF")).check()

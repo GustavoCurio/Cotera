@@ -1,4 +1,5 @@
 """Uso e estimativas em USD; cache e raciocínio são subconjuntos, nunca tokens extras."""
+
 from decimal import Decimal
 import json
 import os
@@ -30,7 +31,9 @@ def usage_from(response):
 
 
 def load_pricing(path=None):
-    return json.loads(Path(path or os.environ.get("COTERA_LLM_PRICING_PATH") or PRICING_PATH).read_text(encoding="utf-8"))
+    return json.loads(
+        Path(path or os.environ.get("COTERA_LLM_PRICING_PATH") or PRICING_PATH).read_text(encoding="utf-8")
+    )
 
 
 def rates_for(pricing, model):

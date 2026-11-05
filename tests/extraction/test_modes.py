@@ -1,4 +1,5 @@
 """Verificação dos limites, evidências, cálculos, transações, API e interface."""
+
 from copy import deepcopy
 from decimal import Decimal
 from io import BytesIO
@@ -52,7 +53,6 @@ def test_ai_requires_consent_and_checks_schema_and_evidence(document):
         extract(document, demo_request(), "ai", consent=True, client=client, model="test")
 
 
-
 def test_ai_configuration_and_unknown_mode(document):
     with pytest.raises(ValueError, match="OPENAI_MODEL"):
         extract(document, demo_request(), "ai", consent=True)
@@ -62,7 +62,6 @@ def test_ai_configuration_and_unknown_mode(document):
         extract(document, demo_request(), "invalid")
 
 
-
 def test_brl_currency_can_be_grounded_in_explicit_currency_symbol(document):
     draft = extract_template(document)
     draft.evidence.currency = draft.evidence.freight
@@ -70,7 +69,6 @@ def test_brl_currency_can_be_grounded_in_explicit_currency_symbol(document):
     draft.evidence.currency = draft.evidence.delivery_days
     with pytest.raises(ValueError):
         verify_evidence(draft, document)
-
 
 
 def test_ai_receives_server_credentials_without_saving_key(store, document, monkeypatch):
@@ -83,11 +81,18 @@ def test_ai_receives_server_credentials_without_saving_key(store, document, monk
 
     monkeypatch.setattr("openai.OpenAI", fake_openai)
     identifier = store.create(demo_request())["id"]
-    add_document(store, identifier, (DATA / "proposals/aurora.txt").read_bytes(), "aurora.txt", "ai",
-                 consent=True, model="modelo-simulado", api_key="chave-ficticia-para-teste")
+    add_document(
+        store,
+        identifier,
+        (DATA / "proposals/aurora.txt").read_bytes(),
+        "aurora.txt",
+        "ai",
+        consent=True,
+        model="modelo-simulado",
+        api_key="chave-ficticia-para-teste",
+    )
     assert options == {"api_key": "chave-ficticia-para-teste", "timeout": 30, "max_retries": 0}
     assert responses.calls[0]["model"] == "modelo-simulado"
     snapshot = store.get(identifier)
     assert snapshot["eligible_count"] == 1
     assert "chave-ficticia-para-teste" not in snapshot_json(snapshot).decode()
-

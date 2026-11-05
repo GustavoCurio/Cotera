@@ -1,4 +1,5 @@
 """Cesta e propostas de fornecedores fictícios para explorar o Cotera."""
+
 from pathlib import Path
 from hashlib import sha256
 from .documents import read_document
@@ -11,11 +12,14 @@ DEMO_TITLE = "Reposição do escritório · demonstração"
 
 def demo_request():
     """Cesta fixa de vinte resmas, cinquenta canetas e dez organizadores."""
-    return PurchaseRequest(title=DEMO_TITLE, items=[
-        {"sku": "PAP-A4", "description": "Papel A4 · resma de 500 folhas", "quantity": "20", "unit": "un"},
-        {"sku": "CAN-AZ", "description": "Caneta esferográfica azul", "quantity": "50", "unit": "un"},
-        {"sku": "ORG-M", "description": "Organizador de mesa", "quantity": "10", "unit": "un"},
-    ])
+    return PurchaseRequest(
+        title=DEMO_TITLE,
+        items=[
+            {"sku": "PAP-A4", "description": "Papel A4 · resma de 500 folhas", "quantity": "20", "unit": "un"},
+            {"sku": "CAN-AZ", "description": "Caneta esferográfica azul", "quantity": "50", "unit": "un"},
+            {"sku": "ORG-M", "description": "Organizador de mesa", "quantity": "10", "unit": "un"},
+        ],
+    )
 
 
 def seed_demo(store, *, scanned=False):

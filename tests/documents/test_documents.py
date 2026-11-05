@@ -1,4 +1,5 @@
 """Verificação dos limites, evidências, cálculos, transações, API e interface."""
+
 from copy import deepcopy
 from decimal import Decimal
 from io import BytesIO
@@ -35,12 +36,10 @@ def test_brazilian_numbers(text, value):
     assert br_number(text) == Decimal(value)
 
 
-
 @pytest.mark.parametrize("text", ["12.50", "1.23,00", "1e3", "NaN", "Infinity", "R$", "1,2345"])
 def test_ambiguous_or_unbounded_numbers_rejected(text):
     with pytest.raises(ValueError):
         br_number(text)
-
 
 
 def test_pdf_and_txt_produce_same_draft(document):
@@ -51,12 +50,21 @@ def test_pdf_and_txt_produce_same_draft(document):
     verify_evidence(second, pdf)
 
 
-
-@pytest.mark.parametrize("content,name", [(b"", "a.txt"), (b"x"*(MAX_BYTES+1), "a.txt"), (b"bad", "a.exe"), (b"\xff", "a.txt"), (b"bad", "a.pdf"), (b" ", "a.txt"), (b"x"*25001, "a.txt")])
+@pytest.mark.parametrize(
+    "content,name",
+    [
+        (b"", "a.txt"),
+        (b"x" * (MAX_BYTES + 1), "a.txt"),
+        (b"bad", "a.exe"),
+        (b"\xff", "a.txt"),
+        (b"bad", "a.pdf"),
+        (b" ", "a.txt"),
+        (b"x" * 25001, "a.txt"),
+    ],
+)
 def test_document_limits(content, name):
     with pytest.raises(ValueError):
         read_document(content, name)
-
 
 
 def test_pdf_encrypted_blank_and_page_limit():
@@ -73,7 +81,6 @@ def test_pdf_encrypted_blank_and_page_limit():
             read_document(stream.getvalue(), "blank.pdf")
 
 
-
 def test_sources_are_checked_and_missing_values_stay_missing(document):
     draft = extract_template(document)
     draft.freight = Decimal("999.00")
@@ -86,7 +93,6 @@ def test_sources_are_checked_and_missing_values_stay_missing(document):
     assert not audit_quote(demo_request(), partial)["eligible"]
 
 
-
 def test_bad_line_and_repeated_root_fields(document):
     draft = extract_template(document)
     draft.evidence.supplier = 999
@@ -95,7 +101,6 @@ def test_bad_line_and_repeated_root_fields(document):
     content = ("\n".join(document.lines) + "\nFrete: R$ 0,00").encode()
     with pytest.raises(ValueError, match="repetido"):
         extract_template(read_document(content, "duplicate.txt"))
-
 
 
 def test_request_and_decimal_contracts(document):
@@ -109,4 +114,3 @@ def test_request_and_decimal_contracts(document):
         altered["freight"] = value
         with pytest.raises(ValidationError):
             QuoteDraft.model_validate(altered)
-

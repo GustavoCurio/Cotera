@@ -1,4 +1,5 @@
 """Respostas simuladas compartilhadas pelos testes de extração e interfaces."""
+
 import json
 from types import SimpleNamespace
 
@@ -11,4 +12,3 @@ class FakeResponses:
     def create(self, **kwargs):
         self.calls.append(kwargs)
         return SimpleNamespace(output_text=json.dumps(self.payload), status=self.status, usage=self.usage)
-

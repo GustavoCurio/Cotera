@@ -1,4 +1,5 @@
 """Verificação dos limites, evidências, cálculos, transações, API e interface."""
+
 from copy import deepcopy
 from decimal import Decimal
 from io import BytesIO
@@ -38,20 +39,32 @@ def test_api_end_to_end_auth_and_conflict(store, monkeypatch):
         assert response.status_code == 201
         identifier = response.json()["id"]
         path = f"/requests/{identifier}"
-        assert client.post(path+"/proposals", files={"file": ("aurora.pdf", (DATA/"proposals/aurora.pdf").read_bytes(), "application/pdf")}).status_code == 200
-        assert client.post(path+"/proposals", data={"mode": "ai"}, files={"file": ("a.txt", b"test")}).status_code == 403
-        assert client.post(path+"/proposals", files={"file": ("a.exe", b"test")}).status_code == 422
+        assert (
+            client.post(
+                path + "/proposals",
+                files={"file": ("aurora.pdf", (DATA / "proposals/aurora.pdf").read_bytes(), "application/pdf")},
+            ).status_code
+            == 200
+        )
+        assert (
+            client.post(path + "/proposals", data={"mode": "ai"}, files={"file": ("a.txt", b"test")}).status_code == 403
+        )
+        assert client.post(path + "/proposals", files={"file": ("a.exe", b"test")}).status_code == 422
         snapshot = client.get(path).json()
-        decision = {"proposal_id": snapshot["lowest_cost_ids"][0], "expected_version": snapshot["version"], "actor": "Teste", "reason": "Comparação de prazo e valor concluída."}
-        assert client.post(path+"/decisions", json=decision).status_code == 201
-        assert client.post(path+"/decisions", json=decision).status_code == 409
-        assert client.get(path+"/report").status_code == 200
+        decision = {
+            "proposal_id": snapshot["lowest_cost_ids"][0],
+            "expected_version": snapshot["version"],
+            "actor": "Teste",
+            "reason": "Comparação de prazo e valor concluída.",
+        }
+        assert client.post(path + "/decisions", json=decision).status_code == 201
+        assert client.post(path + "/decisions", json=decision).status_code == 409
+        assert client.get(path + "/report").status_code == 200
         assert client.get("/requests/missing").status_code == 404
         assert client.post("/requests/missing/proposals", files={"file": ("a.txt", b"test")}).status_code == 404
         monkeypatch.setenv("COTERA_API_KEY", "test-only")
         assert client.get("/requests").status_code == 401
         assert client.get("/requests", headers={"X-Cotera-Key": "test-only"}).status_code == 200
-
 
 
 @pytest.mark.slow
@@ -62,7 +75,9 @@ def test_streamlit_comparison_decision_documents_and_history(tmp_path, monkeypat
     assert not ui.exception
     assert any("Prumo Distribuidora" in m.value for m in ui.markdown)
     next(t for t in ui.text_input if t.label == "Responsável pela escolha").set_value("Responsável de teste")
-    next(t for t in ui.text_area if t.label == "Justificativa").set_value("Prazo compatível e menor custo total conferido.")
+    next(t for t in ui.text_area if t.label == "Justificativa").set_value(
+        "Prazo compatível e menor custo total conferido."
+    )
     next(b for b in ui.button if b.label == "Registrar decisão").click().run()
     assert not ui.exception and ui.success
     ui.segmented_control[0].set_value("Decisões").run()
@@ -86,7 +101,6 @@ def test_streamlit_comparison_decision_documents_and_history(tmp_path, monkeypat
     assert Store(os.environ["COTERA_DATABASE_URL"]).list() == []
 
 
-
 @pytest.mark.slow
 def test_streamlit_create_own_request(tmp_path, monkeypatch):
     monkeypatch.setenv("COTERA_DEMO_HOME", str(tmp_path / "demo"))
@@ -104,7 +118,6 @@ def test_streamlit_create_own_request(tmp_path, monkeypatch):
     assert ui.segmented_control[0].value == "Documentos"
     own = Store("sqlite:///" + str(tmp_path / "own.sqlite3")).list()
     assert len(own) == 1 and own[0]["items"][0]["sku"] == "TESTE-01"
-
 
 
 @pytest.mark.slow
@@ -126,7 +139,9 @@ def test_example_buttons_give_feedback_and_do_not_duplicate(tmp_path, monkeypatc
         next(b for b in ui.button if b.label == label).click().run()
         assert not ui.exception
         assert any("Aurora Suprimentos" in s.value and "Comparar" in s.value for s in ui.success)
-        snapshots.append(Store("sqlite:///" + str(tmp_path / "demo.sqlite3")).get(ui.selectbox(key="cotera_purchase").value))
+        snapshots.append(
+            Store("sqlite:///" + str(tmp_path / "demo.sqlite3")).get(ui.selectbox(key="cotera_purchase").value)
+        )
     first, second = snapshots
     assert first["id"] == second["id"] and first["version"] == second["version"]
     assert len(second["proposals"]) == 3
@@ -139,7 +154,6 @@ def test_example_buttons_give_feedback_and_do_not_duplicate(tmp_path, monkeypatc
         regular = Store("sqlite:///" + str(tmp_path / "demo.sqlite3")).get(ui.selectbox(key="cotera_purchase").value)
         assert len(regular["proposals"]) == 3
         assert not any(p["audit"]["requires_human_review"] for p in regular["proposals"])
-
 
 
 @pytest.mark.slow
@@ -170,7 +184,6 @@ def test_streamlit_ai_requires_key_and_defaults_to_local(tmp_path, monkeypatch, 
     assert next(b for b in ui.button if b.label == "Extrair e adicionar").disabled
 
 
-
 @pytest.mark.slow
 def test_streamlit_model_without_key_does_not_offer_ai(tmp_path, monkeypatch):
     monkeypatch.setenv("COTERA_DEMO_HOME", str(tmp_path / "demo"))
@@ -181,13 +194,17 @@ def test_streamlit_model_without_key_does_not_offer_ai(tmp_path, monkeypatch):
     assert ui.radio[0].options == ["Modelo Cotera · local"]
 
 
-
 @pytest.mark.slow
 def test_ai_metrics_in_api_persistence_and_streamlit(store, document, tmp_path, monkeypatch):
-    responses = FakeResponses(extract_template(document).model_dump(mode="json"), usage=SimpleNamespace(
-        input_tokens=100, output_tokens=50,
-        input_tokens_details=SimpleNamespace(cached_tokens=20),
-        output_tokens_details=SimpleNamespace(reasoning_tokens=10)))
+    responses = FakeResponses(
+        extract_template(document).model_dump(mode="json"),
+        usage=SimpleNamespace(
+            input_tokens=100,
+            output_tokens=50,
+            input_tokens_details=SimpleNamespace(cached_tokens=20),
+            output_tokens_details=SimpleNamespace(reasoning_tokens=10),
+        ),
+    )
     monkeypatch.setattr("openai.OpenAI", lambda **kwargs: SimpleNamespace(responses=responses))
     monkeypatch.setenv("OPENAI_API_KEY", "chave-ficticia")
     monkeypatch.setenv("OPENAI_MODEL", "gpt-4.1-mini")
@@ -195,8 +212,10 @@ def test_ai_metrics_in_api_persistence_and_streamlit(store, document, tmp_path, 
     identifier = store.create(demo_request())["id"]
     with TestClient(api.app) as client:
         route = f"/requests/{identifier}/proposals"
-        kwargs = {"files": {"file": ("aurora.txt", (DATA / "proposals/aurora.txt").read_bytes())},
-                  "data": {"mode": "ai", "approve_external_processing": "true"}}
+        kwargs = {
+            "files": {"file": ("aurora.txt", (DATA / "proposals/aurora.txt").read_bytes())},
+            "data": {"mode": "ai", "approve_external_processing": "true"},
+        }
         first = client.post(route, **kwargs)
         second = client.post(route, **kwargs)
         assert first.status_code == second.status_code == 200
@@ -217,22 +236,24 @@ def test_ai_metrics_in_api_persistence_and_streamlit(store, document, tmp_path, 
     assert any("custo estimado: US$ 0.00012" in c.value and "Tentativas: 1" in c.value for c in ui.caption)
 
 
-
 def test_api_provider_error_is_typed_safe_and_keeps_usage(store, document, monkeypatch):
-    responses = FakeResponses({**extract_template(document).model_dump(mode="json"), "freight": "999"},
-                              usage=SimpleNamespace(input_tokens=100, output_tokens=50))
+    responses = FakeResponses(
+        {**extract_template(document).model_dump(mode="json"), "freight": "999"},
+        usage=SimpleNamespace(input_tokens=100, output_tokens=50),
+    )
     monkeypatch.setattr("openai.OpenAI", lambda **kwargs: SimpleNamespace(responses=responses))
     monkeypatch.setenv("OPENAI_API_KEY", "chave-ficticia-secreta")
     monkeypatch.setenv("OPENAI_MODEL", "gpt-4.1-mini")
     monkeypatch.setattr(api, "store", lambda: store)
     identifier = store.create(demo_request())["id"]
     with TestClient(api.app) as client:
-        result = client.post(f"/requests/{identifier}/proposals",
-                             files={"file": ("aurora.txt", (DATA / "proposals/aurora.txt").read_bytes())},
-                             data={"mode": "ai", "approve_external_processing": "true"})
+        result = client.post(
+            f"/requests/{identifier}/proposals",
+            files={"file": ("aurora.txt", (DATA / "proposals/aurora.txt").read_bytes())},
+            data={"mode": "ai", "approve_external_processing": "true"},
+        )
     assert result.status_code == 502
     detail = result.json()["detail"]
     assert detail["code"] == "extraction_evidence" and "evidência válida" in detail["message"]
     assert detail["extraction"]["usage"]["input_tokens"] == 200
     assert "secreta" not in result.text and store.get(identifier)["proposals"] == []
-

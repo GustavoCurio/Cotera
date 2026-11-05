@@ -1,4 +1,5 @@
 """Leitura limitada de PDF/TXT com OCR local e parser do modelo Cotera."""
+
 from dataclasses import asdict, dataclass, field
 from decimal import Decimal, InvalidOperation
 from hashlib import sha256
@@ -30,6 +31,7 @@ def br_number(text: str) -> Decimal:
 @dataclass(frozen=True)
 class PageProvenance:
     """Página de base um e intervalo inclusivo na numeração global de evidências."""
+
     page: int
     method: Literal["texto", "ocr"]
     ocr_confidence: float | None = None  # média das palavras, na escala 0–100.
@@ -40,6 +42,7 @@ class PageProvenance:
 @dataclass(frozen=True)
 class Document:
     """Texto por linhas e hash dos bytes originais; nenhum PDF é persistido."""
+
     filename: str
     sha256: str
     lines: list[str]
@@ -99,15 +102,29 @@ def read_document(content: bytes, filename: str) -> Document:
         start = len(lines) + 1
         page_lines = [line.strip() for line in fragment.splitlines() if line.strip()]
         lines.extend(page_lines)
-        pages.append(PageProvenance(index + 1, methods[index], confidences[index],
-                                    start if page_lines else None, len(lines) if page_lines else None))
+        pages.append(
+            PageProvenance(
+                index + 1,
+                methods[index],
+                confidences[index],
+                start if page_lines else None,
+                len(lines) if page_lines else None,
+            )
+        )
     if not lines or len(text) > MAX_CHARS or len(lines) > 1000 or any(len(line) > 2000 for line in lines):
         raise ValueError(NO_TEXT)
     return Document(name, sha256(content).hexdigest(), lines, pages)
 
 
-ROOT_FIELDS = {"Fornecedor": "supplier", "Referência": "reference", "Moeda": "currency",
-               "Prazo": "delivery_days", "Frete": "freight", "Desconto": "discount", "Total declarado": "reported_total"}
+ROOT_FIELDS = {
+    "Fornecedor": "supplier",
+    "Referência": "reference",
+    "Moeda": "currency",
+    "Prazo": "delivery_days",
+    "Frete": "freight",
+    "Desconto": "discount",
+    "Total declarado": "reported_total",
+}
 MONEY_FIELDS = {"freight", "discount", "reported_total"}
 
 
@@ -138,8 +155,9 @@ def extract_template(document: Document) -> QuoteDraft:
             if len(parts) != 4:
                 raise ValueError("Linha de item fora do modelo SKU | Quantidade | Unidade | Preço unitário.")
             sku, quantity, unit, price = parts
-            payload["items"].append(dict(sku=sku, quantity=br_number(quantity), unit=unit,
-                                          unit_price=br_number(price), source_line=number))
+            payload["items"].append(
+                dict(sku=sku, quantity=br_number(quantity), unit=unit, unit_price=br_number(price), source_line=number)
+            )
     if not payload["evidence"]:
         raise ValueError("Modelo não reconhecido. Use o exemplo Cotera ou a extração com IA.")
     draft = QuoteDraft.model_validate(payload)
@@ -153,6 +171,7 @@ def verify_evidence(draft: QuoteDraft, document: Document):
     Números são comparados após leitura no formato brasileiro. A correspondência
     literal não garante que um LLM associou o número à coluna correta.
     """
+
     def check(value, line, numeric=False):
         if value is None:
             if line is not None:
@@ -168,9 +187,16 @@ def verify_evidence(draft: QuoteDraft, document: Document):
             found = re.search(r"(?<!\w)" + re.escape(str(value)) + r"(?!\w)", text, re.I) is not None
         if not found:
             raise ValueError("Valor extraído sem correspondência na linha informada.")
+
     for field in ROOT_FIELDS.values():
         # R$ é indicação explícita de BRL, embora o código não esteja escrito.
-        if field == "currency" and draft.currency == "BRL" and draft.evidence.currency is not None and 1 <= draft.evidence.currency <= len(document.lines) and "R$" in document.lines[draft.evidence.currency - 1]:
+        if (
+            field == "currency"
+            and draft.currency == "BRL"
+            and draft.evidence.currency is not None
+            and 1 <= draft.evidence.currency <= len(document.lines)
+            and "R$" in document.lines[draft.evidence.currency - 1]
+        ):
             continue
         check(getattr(draft, field), getattr(draft.evidence, field), field in MONEY_FIELDS or field == "delivery_days")
     for item in draft.items:

@@ -1,4 +1,5 @@
 """Integração HTTP para cestas, extração, comparação e decisão versionada."""
+
 from functools import lru_cache
 import hmac
 import os
@@ -21,8 +22,12 @@ def authorize(x_cotera_key: str = Header(default="")):
         raise HTTPException(401, "Chave da API inválida ou ausente.")
 
 
-app = FastAPI(title="Cotera API", version="1.0.0", dependencies=[Depends(authorize)],
-              description="Comparação de propostas comerciais, evidências e decisão humana.")
+app = FastAPI(
+    title="Cotera API",
+    version="1.0.0",
+    dependencies=[Depends(authorize)],
+    description="Comparação de propostas comerciais, evidências e decisão humana.",
+)
 
 
 @lru_cache(maxsize=1)
@@ -59,8 +64,12 @@ def get_request(identifier: str):
 
 
 @app.post("/requests/{identifier}/proposals")
-async def add_proposal(identifier: str, file: UploadFile = File(...), mode: Literal["local", "ai"] = Form("local"),
-                       approve_external_processing: bool = Form(False)):
+async def add_proposal(
+    identifier: str,
+    file: UploadFile = File(...),
+    mode: Literal["local", "ai"] = Form("local"),
+    approve_external_processing: bool = Form(False),
+):
     """Recebe PDF/TXT, extrai, verifica origem e persiste; reenvio não duplica proposta.
 
     Retorna 403 sem consentimento de IA, 422 para documento inválido e 502 para
@@ -69,7 +78,14 @@ async def add_proposal(identifier: str, file: UploadFile = File(...), mode: Lite
     try:
         if mode == "ai" and not approve_external_processing:
             raise HTTPException(403, "A extração com IA exige autorização para enviar o texto ao provedor.")
-        return add_document(store(), identifier, await file.read(MAX_BYTES + 1), file.filename or "", mode, consent=approve_external_processing)
+        return add_document(
+            store(),
+            identifier,
+            await file.read(MAX_BYTES + 1),
+            file.filename or "",
+            mode,
+            consent=approve_external_processing,
+        )
     except KeyError as error:
         raise HTTPException(404, "Cotação não encontrada.") from error
     except PermissionError as error:

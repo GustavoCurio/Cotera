@@ -1,4 +1,5 @@
 """Verificação dos limites, evidências, cálculos, transações, API e interface."""
+
 from copy import deepcopy
 from decimal import Decimal
 from io import BytesIO
@@ -31,16 +32,25 @@ from tests.fakes import FakeResponses
 
 
 def test_round_half_up_and_unit_and_deadline(document):
-    request = PurchaseRequest(title="Uma unidade", items=[{"sku": "AB", "description": "Item fracionável", "quantity": "0.125", "unit": "kg"}])
-    draft = QuoteDraft(supplier="Teste", reference="01", currency="BRL", delivery_days=5, freight="0", discount="0", reported_total="0.13",
-                       items=[{"sku": "AB", "quantity": "0.125", "unit": "kg", "unit_price": "1", "source_line": 1}])
+    request = PurchaseRequest(
+        title="Uma unidade", items=[{"sku": "AB", "description": "Item fracionável", "quantity": "0.125", "unit": "kg"}]
+    )
+    draft = QuoteDraft(
+        supplier="Teste",
+        reference="01",
+        currency="BRL",
+        delivery_days=5,
+        freight="0",
+        discount="0",
+        reported_total="0.13",
+        items=[{"sku": "AB", "quantity": "0.125", "unit": "kg", "unit_price": "1", "source_line": 1}],
+    )
     assert audit_quote(request, draft)["computed_total"] == "0.13"
     assert audit_quote(request, draft)["eligible"]
     draft.items[0].unit = "un"
     assert not audit_quote(request, draft)["eligible"]
     deadline = demo_request().model_copy(update={"max_delivery_days": 4})
     assert not audit_quote(deadline, extract_template(document))["eligible"]
-
 
 
 def test_golden_cases_and_no_cheapest_invalid_quote(store):
@@ -57,10 +67,9 @@ def test_golden_cases_and_no_cheapest_invalid_quote(store):
     assert not invalid["audit"]["eligible"]
     # Empates precisam retornar todas as alternativas de menor custo.
     copied = deepcopy(lowest)
-    copied["id"] = "f"*32
+    copied["id"] = "f" * 32
     tied = compare(demo_request(), [lowest, copied])
     assert len(tied["lowest_cost_ids"]) == 2
-
 
 
 def test_exports_escape_html_and_neutralize_formulas(store):
@@ -71,4 +80,3 @@ def test_exports_escape_html_and_neutralize_formulas(store):
     assert "<script>" not in html and "&lt;script&gt;" in html
     assert "'=HYPERLINK(1)" in comparison_csv(snapshot).decode("utf-8-sig")
     assert json.loads(snapshot_json(snapshot))["request"]["title"] == snapshot["request"]["title"]
-

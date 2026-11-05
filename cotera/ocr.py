@@ -1,4 +1,5 @@
 """OCR local limitado; importações opcionais não afetam PDFs textuais nem TXT."""
+
 import csv
 from contextlib import closing
 from io import StringIO
@@ -37,8 +38,13 @@ def read_scanned_pages(content: bytes, indexes: list[int]) -> dict[int, tuple[st
         import pytesseract
 
         # Tesseract pode continuar com só um idioma quando outro falta. Exigimos ambos.
-        result = subprocess.run([pytesseract.pytesseract.tesseract_cmd, "--list-langs"],
-                                capture_output=True, text=True, timeout=remaining(), check=True)
+        result = subprocess.run(
+            [pytesseract.pytesseract.tesseract_cmd, "--list-langs"],
+            capture_output=True,
+            text=True,
+            timeout=remaining(),
+            check=True,
+        )
         if not {"por", "eng"}.issubset({line.strip() for line in result.stdout.splitlines()}):
             raise OSError("Idiomas por+eng indisponíveis.")
         pages = {}
@@ -54,8 +60,12 @@ def read_scanned_pages(content: bytes, indexes: list[int]) -> dict[int, tuple[st
                             # TSV dá texto e confiança na mesma execução. A função de baixo
                             # nível evita a consulta de versão sem timeout de image_to_data.
                             tsv = pytesseract.pytesseract.run_and_get_output(
-                                image, extension="tsv", lang="por+eng",
-                                config="--psm 6 -c tessedit_create_tsv=1", timeout=remaining())
+                                image,
+                                extension="tsv",
+                                lang="por+eng",
+                                config="--psm 6 -c tessedit_create_tsv=1",
+                                timeout=remaining(),
+                            )
                 remaining()
                 lines, confidences = {}, []
                 for row in csv.DictReader(StringIO(tsv), delimiter="\t", quoting=csv.QUOTE_NONE):
@@ -73,11 +83,17 @@ def read_scanned_pages(content: bytes, indexes: list[int]) -> dict[int, tuple[st
         remaining()
         return pages
     except (TimeoutError, subprocess.TimeoutExpired) as error:
-        raise ValueError("Tempo total de OCR excedido. Envie um PDF com texto selecionável ou reduza as páginas.") from error
+        raise ValueError(
+            "Tempo total de OCR excedido. Envie um PDF com texto selecionável ou reduza as páginas."
+        ) from error
     except RuntimeError as error:
         # pytesseract encerra o processo ao expirar timeout e lança RuntimeError.
         if "timeout" in str(error).lower():
-            raise ValueError("Tempo total de OCR excedido. Envie um PDF com texto selecionável ou reduza as páginas.") from error
-        raise ValueError(NO_TEXT + " OCR local indisponível ou não reconheceu texto; confira Tesseract e os idiomas por+eng.") from error
+            raise ValueError(
+                "Tempo total de OCR excedido. Envie um PDF com texto selecionável ou reduza as páginas."
+            ) from error
+        raise ValueError(
+            NO_TEXT + " OCR local indisponível ou não reconheceu texto; confira Tesseract e os idiomas por+eng."
+        ) from error
     except (ImportError, OSError, subprocess.SubprocessError) as error:
         raise ValueError(NO_TEXT + " OCR local indisponível; instale Tesseract e os idiomas por+eng.") from error
