@@ -78,4 +78,3 @@ branch = true
 fail_under = 90.0
 show_missing = true
 precision = 2
-
