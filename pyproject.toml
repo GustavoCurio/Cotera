@@ -10,7 +10,11 @@ requires-python = ">=3.12"
 dynamic = ["dependencies"]
 
 [tool.setuptools]
-packages = ["cotera"]
+packages = ["cotera", "evals", "evals.llm"]
+
+[tool.setuptools.package-data]
+"evals" = ["cases.json"]
+"evals.llm" = ["*.json", "*.md", "documents/*.txt", "documents/*.pdf"]
 
 [tool.setuptools.dynamic]
 dependencies = {file = ["requirements.txt"]}
