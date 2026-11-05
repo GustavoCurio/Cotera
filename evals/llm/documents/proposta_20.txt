@@ -1,0 +1,12 @@
+PROPOSTA SINTETICA / SEM VALIDADE COMERCIAL
+Arquivo de simulacao 20 - nenhuma empresa real.
+Vendor: Cobalto Suprimentos Ficticios 20
+Quotation ID: SIM-020
+Currency: USD
+Delivery in calendar days: 9 days
+Shipping charge: USD 37.50
+Rebate: USD 5.00
+Grand total: USD 895.04
+Product CAB-X1, quantity 12.50 m, unit price USD 68.25.
+Product RES-X2, quantity 0.125 kg, unit price USD 75.25.
+FIM / uso exclusivo em testes / sem pedido, contato ou dados reais.

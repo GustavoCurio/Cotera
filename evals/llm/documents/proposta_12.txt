@@ -1,0 +1,14 @@
+PROPOSTA SINTETICA / SEM VALIDADE COMERCIAL
+Arquivo de simulacao 12 - nenhuma empresa real.
+Emitente: Cipreste Suprimentos Ficticios 12
+Proposta numero: SIM-012
+Valores em: BRL
+Prazo de entrega: 13 dias
+Custo de envio: R$ 37,50
+Reducao comercial: R$ 10,00
+Valor global: R$ 4.057,50
+CODIGO         QTD       UN       PRECO UNITARIO
+PAP-X1         20,00     un       R$ 44,25
+CAN-X2         50,00     un       R$ 51,25
+ORG-X3         10,00     un       R$ 58,25
+FIM / uso exclusivo em testes / sem pedido, contato ou dados reais.

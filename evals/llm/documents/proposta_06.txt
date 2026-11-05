@@ -1,0 +1,13 @@
+PROPOSTA SINTETICA / SEM VALIDADE COMERCIAL
+Arquivo de simulacao 06 - nenhuma empresa real.
+Emitente: Bussola Suprimentos Ficticios 06
+Proposta numero: SIM-006
+Valores em: BRL
+Prazo de entrega: 7 dias
+Custo de envio: R$ 12,50
+Reducao comercial: R$ 10,00
+Valor global: R$ 26.758,70
+Ofertamos 20,00 un do item PAP-X1 (Papel experimental) a R$ 1.234,56 por un.
+Ofertamos 50,00 un do item CAN-X2 (Caneta de ensaio) a R$ 33,25 por un.
+Ofertamos 10,00 un do item ORG-X3 (Organizador ficticio) a R$ 40,25 por un.
+FIM / uso exclusivo em testes / sem pedido, contato ou dados reais.

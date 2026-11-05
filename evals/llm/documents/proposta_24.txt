@@ -1,0 +1,13 @@
+PROPOSTA SINTETICA / SEM VALIDADE COMERCIAL
+Arquivo de simulacao 24 - nenhuma empresa real.
+Entrega em 12/12/2026; prazo em dias nao informado.
+Emitente: Cipreste Suprimentos Ficticios 24
+Proposta numero: SIM-024
+Valores em: BRL
+Custo de envio: R$ 37,50
+Reducao comercial: R$ 10,00
+Valor global: R$ 1.041,54
+CODIGO         QTD       UN       PRECO UNITARIO
+CAB-X1         12,50     m        R$ 80,25
+RES-X2         0,125     kg       R$ 87,25
+FIM / uso exclusivo em testes / sem pedido, contato ou dados reais.

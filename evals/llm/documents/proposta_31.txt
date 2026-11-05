@@ -1,0 +1,14 @@
+PROPOSTA SINTETICA / SEM VALIDADE COMERCIAL
+Arquivo de simulacao 31 - nenhuma empresa real.
+Emitente: Petala Suprimentos Ficticios 31
+Proposta numero: SIM-031
+Valores em: BRL
+Prazo de entrega: 8 dias
+Custo de envio: R$ 25,00
+Reducao comercial: R$ 0,00
+Valor global: R$ 1.104,44
+codigo	quantidade	unidade	preco unitario
+SER-X1	3,00	h	R$ 101,25
+LUB-X2	2,75	l	R$ 108,25
+CX-X3	4,00	un	R$ 115,25
+FIM / uso exclusivo em testes / sem pedido, contato ou dados reais.

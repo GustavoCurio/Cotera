@@ -1,0 +1,16 @@
+PROPOSTA SINTETICA / SEM VALIDADE COMERCIAL
+Arquivo de simulacao 22 - nenhuma empresa real.
+Emitente: Alfazema Suprimentos Ficticios 22
+Proposta numero: SIM-022
+Valores em: BRL
+Prazo de entrega: 11 dias
+Custo de envio: R$ 12,50
+Reducao comercial: R$ 0,00
+Valor global: R$ 950,79
+Produto CAB-X1
+Descricao: Cabo simulado
+Quantidade 12,50 m; preco unitario R$ 74,25
+Produto RES-X2
+Descricao: Resina de laboratorio ficticia
+Quantidade 0,125 kg; preco unitario R$ 81,25
+FIM / uso exclusivo em testes / sem pedido, contato ou dados reais.

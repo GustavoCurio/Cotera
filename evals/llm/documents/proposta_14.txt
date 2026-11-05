@@ -1,0 +1,12 @@
+PROPOSTA SINTETICA / SEM VALIDADE COMERCIAL
+Arquivo de simulacao 14 - nenhuma empresa real.
+Emitente: Jacaranda Suprimentos Ficticios 14
+Proposta numero: SIM-014
+Valores em: BRL
+Prazo de entrega: 3 dias
+Reducao comercial: R$ 5,00
+Valor global: R$ 630,29
+Preco unitario | Unidade | Codigo | Quantidade | Descricao
+R$ 50,25 | m | CAB-X1 | 12,50 | Cabo simulado
+R$ 57,25 | kg | RES-X2 | 0,125 | Resina de laboratorio ficticia
+FIM / uso exclusivo em testes / sem pedido, contato ou dados reais.

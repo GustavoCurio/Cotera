@@ -1,0 +1,13 @@
+PROPOSTA SINTETICA / SEM VALIDADE COMERCIAL
+Arquivo de simulacao 13 - nenhuma empresa real.
+Fornecedor: Neblina Suprimentos Ficticios 13
+Referência: SIM-013
+Moeda: BRL
+Prazo: 2 dias
+Frete: R$ 0,00
+Desconto: R$ 0,00
+Total declarado: R$ 597,41
+SKU | Quantidade | Unidade | Preço unitário
+CAB-X1 | 12,50 | m | R$ 47,25
+RES-X2 | 0,125 | kg | R$ 54,25
+FIM / uso exclusivo em testes / sem pedido, contato ou dados reais.

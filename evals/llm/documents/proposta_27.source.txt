@@ -1,0 +1,14 @@
+PROPOSTA SINTETICA / SEM VALIDADE COMERCIAL
+Arquivo de simulacao 27 - nenhuma empresa real.
+Entrega em 12/12/2026; prazo em dias nao informado.
+Emitente: Astrolabio Suprimentos Ficticios 27
+Proposta numero: SIM-027
+Valores em: BRL
+Custo de envio: R$ 25,00
+Reducao comercial: R$ 10,00
+Valor global: R$ 960,44
+codigo;descricao;preco unitario;quantidade;unidade
+SER-X1;Servico de simulacao;R$ 89,25;3,00;h
+LUB-X2;Liquido cenografico;R$ 96,25;2,75;l
+CX-X3;Caixa vazia ficticia;R$ 103,25;4,00;un
+FIM / uso exclusivo em testes / sem pedido, contato ou dados reais.

@@ -1,0 +1,16 @@
+PROPOSTA SINTETICA / SEM VALIDADE COMERCIAL
+Arquivo de simulacao 11 - nenhuma empresa real.
+Emitente: Orvalho Suprimentos Ficticios 11
+Proposta numero: SIM-011
+Valores em: BRL
+Prazo de entrega: 12 dias
+Custo de envio: R$ 25,00
+Reducao comercial: R$ 5,00
+Valor global: R$ 3.810,00
+SKU | Quantidade | Unidade | Preço unitário
+PAP-X1 | 20,00 | un | R$ 41,25
+CAN-X2 | 50,00 | un | R$ 48,25
+ORG-X3 | 10,00 | un | R$ 55,25
+FIM / uso exclusivo em testes / sem pedido, contato ou dados reais.
+Controle interno: 9999 / pagina 01 / nao e total
+Relatorio gerado apenas para simulacao.

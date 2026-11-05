@@ -1,0 +1,14 @@
+PROPOSTA SINTETICA / SEM VALIDADE COMERCIAL
+Arquivo de simulacao 25 - nenhuma empresa real.
+Fornecedor: Neblina Suprimentos Ficticios 25
+Referência: SIM-025
+Moeda: EUR
+Prazo: 2 dias
+Frete: EUR 0,00
+Desconto: EUR 0,00
+Total declarado: EUR 886,94
+SKU | Quantidade | Unidade | Preço unitário
+SER-X1 | 3,00 | h | EUR 83,25
+LUB-X2 | 2,75 | l | EUR 90,25
+CX-X3 | 4,00 | un | EUR 97,25
+FIM / uso exclusivo em testes / sem pedido, contato ou dados reais.

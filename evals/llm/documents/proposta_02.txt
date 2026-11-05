@@ -1,0 +1,14 @@
+PROPOSTA SINTETICA / SEM VALIDADE COMERCIAL
+Arquivo de simulacao 02 - nenhuma empresa real.
+Emitente: Jacaranda Suprimentos Ficticios 02
+Proposta numero: SIM-002
+Valores em: BRL
+Prazo de entrega: 3 dias
+Custo de envio: R$ 12,50
+Reducao comercial: R$ 5,00
+Valor global: R$ 1.637,50
+Preco unitario | Unidade | Codigo | Quantidade | Descricao
+R$ 14,25 | un | PAP-X1 | 20,00 | Papel experimental
+R$ 21,25 | un | CAN-X2 | 50,00 | Caneta de ensaio
+R$ 28,25 | un | ORG-X3 | 10,00 | Organizador ficticio
+FIM / uso exclusivo em testes / sem pedido, contato ou dados reais.

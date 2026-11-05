@@ -1,0 +1,13 @@
+PROPOSTA SINTETICA / SEM VALIDADE COMERCIAL
+Arquivo de simulacao 08 - nenhuma empresa real.
+Vendor: Cobalto Suprimentos Ficticios 08
+Quotation ID: SIM-008
+Currency: USD
+Delivery in calendar days: 9 days
+Shipping charge: USD 37.50
+Rebate: USD 5.00
+Grand total: USD 3,102.50
+Product PAP-X1, quantity 20.00 un, unit price USD 32.25.
+Product CAN-X2, quantity 50.00 un, unit price USD 39.25.
+Product ORG-X3, quantity 10.00 un, unit price USD 46.25.
+FIM / uso exclusivo em testes / sem pedido, contato ou dados reais.

@@ -1,0 +1,16 @@
+PROPOSTA SINTETICA / SEM VALIDADE COMERCIAL
+Arquivo de simulacao 15 - nenhuma empresa real.
+COPIA INTERNA - lote 777 - nao somar
+Pagina 1 de 1 / revisao 98 / catalogo 2026
+Emitente: Astrolabio Suprimentos Ficticios 15
+Proposta numero: SIM-015
+Valores em: BRL
+Prazo de entrega: 4 dias
+Custo de envio: R$ 25,00
+Reducao comercial: R$ 10,00
+Valor global: R$ 1.353,79
+codigo;descricao;preco unitario;quantidade;unidade
+CAB-X1;Cabo simulado;R$ 53,25;12,50;m
+RES-X2;Resina de laboratorio ficticia;R$ 60,25;0,125;kg
+CAB-X1;Cabo simulado;R$ 53,25;12,50;m
+FIM / uso exclusivo em testes / sem pedido, contato ou dados reais.

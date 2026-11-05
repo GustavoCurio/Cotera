@@ -1,0 +1,13 @@
+PROPOSTA SINTETICA / SEM VALIDADE COMERCIAL
+Arquivo de simulacao 03 - nenhuma empresa real.
+Emitente: Astrolabio Suprimentos Ficticios 03
+Proposta numero: SIM-003
+Valores em: BRL
+Prazo de entrega: 4 dias
+Reducao comercial: R$ 10,00
+Valor global: R$ 1.860,00
+codigo;descricao;preco unitario;quantidade;unidade
+PAP-X1;Papel experimental;R$ 17,25;20,00;un
+CAN-X2;Caneta de ensaio;R$ 24,25;50,00;un
+ORG-X3;Organizador ficticio;R$ 31,25;10,00;un
+FIM / uso exclusivo em testes / sem pedido, contato ou dados reais.

@@ -1,0 +1,15 @@
+PROPOSTA SINTETICA / SEM VALIDADE COMERCIAL
+Arquivo de simulacao 33 - nenhuma empresa real.
+COPIA INTERNA - lote 777 - nao somar
+Pagina 1 de 1 / revisao 98 / catalogo 2026
+Emitente: Mandala Suprimentos Ficticios 33
+Proposta numero: SIM-033
+Valores em: BRL
+Prazo de entrega: 10 dias
+Custo de envio: R$ 0,00
+Reducao comercial: R$ 10,00
+Valor global: R$ 1.110,94
+sku=SER-X1 qty=3,00 unit=h unit_price=R$ 107,25
+sku=LUB-X2 qty=2,75 unit=l unit_price=R$ 114,25
+sku=CX-X3 qty=4,00 unit=un unit_price=R$ 121,25
+FIM / uso exclusivo em testes / sem pedido, contato ou dados reais.

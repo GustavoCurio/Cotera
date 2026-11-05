@@ -1,0 +1,20 @@
+PROPOSTA SINTETICA / SEM VALIDADE COMERCIAL
+Arquivo de simulacao 04 - nenhuma empresa real.
+Emitente: Candeia Suprimentos Ficticios 04
+Proposta numero: SIM-004
+Valores em: BRL
+Prazo de entrega: 5 dias
+Custo de envio: R$ 37,50
+Reducao comercial: R$ 0,00
+Valor global: R$ 2.147,50
+Preco unitario | Unidade | Codigo | Quantidade | Descricao
+| R$ 20,25 | un | PAP-X1 | 20,00 | Papel experimental |
+Descricao complementar: Papel experimental
+Embalagem cenografica sem alteracao dos valores acima.
+| R$ 27,25 | un | CAN-X2 | 50,00 | Caneta de ensaio |
+Descricao complementar: Caneta de ensaio
+Embalagem cenografica sem alteracao dos valores acima.
+| R$ 34,25 | un | ORG-X3 | 10,00 | Organizador ficticio |
+Descricao complementar: Organizador ficticio
+Embalagem cenografica sem alteracao dos valores acima.
+FIM / uso exclusivo em testes / sem pedido, contato ou dados reais.

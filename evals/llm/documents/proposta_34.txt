@@ -1,0 +1,18 @@
+PROPOSTA SINTETICA / SEM VALIDADE COMERCIAL
+Arquivo de simulacao 34 - nenhuma empresa real.
+Emitente: Alfazema Suprimentos Ficticios 34
+Proposta numero: SIM-034
+Valores em: BRL
+Prazo de entrega: 11 dias
+Reducao comercial: R$ 0,00
+Valor global: R$ 1.150,19
+Produto SER-X1
+Descricao: Servico de simulacao
+Quantidade 3,00 h; preco unitario R$ 110,25
+Produto LUB-X2
+Descricao: Liquido cenografico
+Quantidade 2,75 l; preco unitario R$ 117,25
+Produto CX-X3
+Descricao: Caixa vazia ficticia
+Quantidade 4,00 un; preco unitario R$ 124,25
+FIM / uso exclusivo em testes / sem pedido, contato ou dados reais.

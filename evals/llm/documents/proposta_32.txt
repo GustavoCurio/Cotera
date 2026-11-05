@@ -1,0 +1,13 @@
+PROPOSTA SINTETICA / SEM VALIDADE COMERCIAL
+Arquivo de simulacao 32 - nenhuma empresa real.
+Vendor: Cobalto Suprimentos Ficticios 32
+Quotation ID: SIM-032
+Currency: USD
+Delivery in calendar days: 9 days
+Shipping charge: USD 37.50
+Rebate: USD 5.00
+Grand total: USD 1,124.19
+Product SER-X1, quantity 3.00 h, unit price USD 104.25.
+Product LUB-X2, quantity 2.75 l, unit price USD 111.25.
+Product CX-X3, quantity 4.00 un, unit price USD 118.25.
+FIM / uso exclusivo em testes / sem pedido, contato ou dados reais.

@@ -1,0 +1,12 @@
+PROPOSTA SINTETICA / SEM VALIDADE COMERCIAL
+Arquivo de simulacao 18 - nenhuma empresa real.
+Emitente: Bussola Suprimentos Ficticios 18
+Proposta numero: SIM-018
+Valores em: BRL
+Prazo de entrega: 7 dias
+Custo de envio: R$ 12,50
+Reducao comercial: R$ 10,00
+Valor global: R$ 15.443,16
+Ofertamos 12,50 m do item CAB-X1 (Cabo simulado) a R$ 1.234,56 por m.
+Ofertamos 0,125 kg do item RES-X2 (Resina de laboratorio ficticia) a R$ 69,25 por kg.
+FIM / uso exclusivo em testes / sem pedido, contato ou dados reais.

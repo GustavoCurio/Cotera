@@ -1,0 +1,12 @@
+PROPOSTA SINTETICA / SEM VALIDADE COMERCIAL
+Arquivo de simulacao 16 - nenhuma empresa real.
+Emitente: Candeia Suprimentos Ficticios 16
+Proposta numero: SIM-016
+Valores em: BRL
+Prazo de entrega: 5 dias
+Custo de envio: R$ 37,50
+Valor global: R$ 748,54
+Preco unitario | Unidade | Codigo | Quantidade | Descricao
+| R$ 56,25 | m | CAB-X1 | 12,50 | Cabo simulado |
+| R$ 63,25 | kg | RES-X2 | 0,125 | Resina de laboratorio ficticia |
+FIM / uso exclusivo em testes / sem pedido, contato ou dados reais.

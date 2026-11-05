@@ -1,0 +1,14 @@
+PROPOSTA SINTETICA / SEM VALIDADE COMERCIAL
+Arquivo de simulacao 07 - nenhuma empresa real.
+Emitente: Petala Suprimentos Ficticios 07
+Proposta numero: SIM-007
+Valores em: BRL
+Prazo de entrega: 8 dias
+Custo de envio: R$ 25,00
+Reducao comercial: R$ 0,00
+Valor global: R$ 2.872,00
+codigo	quantidade	unidade	preco unitario
+PAP-X1	20,00	un	R$ 29,25
+CAN-X2	50,00	un	R$ 36,25
+ORG-X3	10,00	un	R$ 43,25
+FIM / uso exclusivo em testes / sem pedido, contato ou dados reais.

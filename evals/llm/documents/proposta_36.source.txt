@@ -1,0 +1,14 @@
+PROPOSTA SINTETICA / SEM VALIDADE COMERCIAL
+Arquivo de simulacao 36 - nenhuma empresa real.
+Emitente: Cipreste Suprimentos Ficticios 36
+Proposta numero: SIM-036
+Valores em: USD
+Prazo de entrega: 13 days
+Custo de envio: USD 37.50
+Reducao comercial: USD 10.00
+Valor global: USD 4,591.12
+CODIGO         QTD       UN       PRECO UNITARIO
+SER-X1         3.00      h        USD 1,234.56
+LUB-X2         2.75      l        USD 123.25
+CX-X3          4.00      un       USD 130.25
+FIM / uso exclusivo em testes / sem pedido, contato ou dados reais.

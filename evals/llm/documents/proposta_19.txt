@@ -1,0 +1,13 @@
+PROPOSTA SINTETICA / SEM VALIDADE COMERCIAL
+Arquivo de simulacao 19 - nenhuma empresa real.
+Emitente: Petala Suprimentos Ficticios 19
+Proposta numero: SIM-019
+Valores em: BRL
+Prazo de entrega: 8 dias
+Custo de envio: R$ 25,00
+Reducao comercial: R$ 0,00
+Valor global: R$ 866,66
+codigo	quantidade	unidade	preco unitario
+CAB-X1	12,50	m	R$ 65,25
+RES-X2	0,125	kg	R$ 72,25
+FIM / uso exclusivo em testes / sem pedido, contato ou dados reais.

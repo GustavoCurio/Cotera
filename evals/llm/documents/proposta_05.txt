@@ -1,0 +1,15 @@
+PROPOSTA SINTETICA / SEM VALIDADE COMERCIAL
+Arquivo de simulacao 05 - nenhuma empresa real.
+Razao do proponente: Luar Suprimentos Ficticios 05
+Numero do orcamento: SIM-005
+Divisa: BRL
+Entrega prevista: 6 dias
+Transporte: R$ 0,00
+Montante final: R$ 2.350,00
+Ficha 1 - Papel experimental
+Codigo PAP-X1; quantidade 20,00 un; preco unitario R$ 23,25
+Ficha 2 - Caneta de ensaio
+Codigo CAN-X2; quantidade 50,00 un; preco unitario R$ 30,25
+Ficha 3 - Organizador ficticio
+Codigo ORG-X3; quantidade 10,00 un; preco unitario R$ 37,25
+FIM / uso exclusivo em testes / sem pedido, contato ou dados reais.

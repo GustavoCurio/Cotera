@@ -1,0 +1,12 @@
+PROPOSTA SINTETICA / SEM VALIDADE COMERCIAL
+Arquivo de simulacao 26 - nenhuma empresa real.
+Emitente: Jacaranda Suprimentos Ficticios 26
+Proposta numero: SIM-026
+Valores em: BRL
+Prazo de entrega: 3 dias
+Valor global: R$ 916,19
+Preco unitario | Unidade | Codigo | Quantidade | Descricao
+R$ 86,25 | h | SER-X1 | 3,00 | Servico de simulacao
+R$ 93,25 | l | LUB-X2 | 2,75 | Liquido cenografico
+R$ 100,25 | un | CX-X3 | 4,00 | Caixa vazia ficticia
+FIM / uso exclusivo em testes / sem pedido, contato ou dados reais.

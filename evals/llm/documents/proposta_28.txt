@@ -1,0 +1,13 @@
+PROPOSTA SINTETICA / SEM VALIDADE COMERCIAL
+Arquivo de simulacao 28 - nenhuma empresa real.
+Emitente: Candeia Suprimentos Ficticios 28
+Proposta numero: SIM-028
+Prazo de entrega: 5 dias
+Custo de envio: 37,50
+Reducao comercial: 0,00
+Valor global: 1.012,19
+Preco unitario | Unidade | Codigo | Quantidade | Descricao
+| 92,25 | h | SER-X1 | 3,00 | Servico de simulacao |
+| 99,25 | l | LUB-X2 | 2,75 | Liquido cenografico |
+| 106,25 | un | CX-X3 | 4,00 | Caixa vazia ficticia |
+FIM / uso exclusivo em testes / sem pedido, contato ou dados reais.

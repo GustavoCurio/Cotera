@@ -1,0 +1,13 @@
+PROPOSTA SINTETICA / SEM VALIDADE COMERCIAL
+Arquivo de simulacao 09 - nenhuma empresa real.
+Emitente: Mandala Suprimentos Ficticios 09
+Proposta numero: SIM-009
+Valores em: EUR
+Prazo de entrega: 10 dias
+Custo de envio: EUR 0,00
+Reducao comercial: EUR 10,00
+Valor global: EUR 3.300,00
+sku=PAP-X1 qty=20,00 unit=un unit_price=EUR 35,25
+sku=CAN-X2 qty=50,00 unit=un unit_price=EUR 42,25
+sku=ORG-X3 qty=10,00 unit=un unit_price=EUR 49,25
+FIM / uso exclusivo em testes / sem pedido, contato ou dados reais.

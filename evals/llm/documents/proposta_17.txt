@@ -1,0 +1,18 @@
+PROPOSTA SINTETICA / SEM VALIDADE COMERCIAL
+Arquivo de simulacao 17 - nenhuma empresa real.
+Razao do proponente: Luar Suprimentos Ficticios 17
+Numero do orcamento: SIM-017
+Divisa: BRL
+Entrega prevista: 6 dias
+Transporte: R$ 0,00
+Abatimento: R$ 5,00
+Montante final: R$ 743,91
+Ficha 1 - Cabo simulado
+Codigo CAB-X1; quantidade 12,50 m; preco unitario R$ 59,25
+Descricao complementar: Cabo simulado
+Embalagem cenografica sem alteracao dos valores acima.
+Ficha 2 - Resina de laboratorio ficticia
+Codigo RES-X2; quantidade 0,125 kg; preco unitario R$ 66,25
+Descricao complementar: Resina de laboratorio ficticia
+Embalagem cenografica sem alteracao dos valores acima.
+FIM / uso exclusivo em testes / sem pedido, contato ou dados reais.

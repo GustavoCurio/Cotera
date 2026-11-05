@@ -1,0 +1,17 @@
+PROPOSTA SINTETICA / SEM VALIDADE COMERCIAL
+Arquivo de simulacao 23 - nenhuma empresa real.
+COPIA INTERNA - lote 777 - nao somar
+Pagina 1 de 1 / revisao 98 / catalogo 2026
+Emitente: Orvalho Suprimentos Ficticios 23
+Proposta numero: SIM-023
+Valores em: BRL
+Prazo de entrega: 12 dias
+Custo de envio: R$ 25,00
+Reducao comercial: R$ 5,00
+Valor global: R$ 996,16
+SKU | Quantidade | Unidade | Preço unitário
+CAB-X1 | 12,50 | m | R$ 77,25
+RES-X2 | 0,125 | kg | R$ 84,25
+FIM / uso exclusivo em testes / sem pedido, contato ou dados reais.
+Controle interno: 9999 / pagina 01 / nao e total
+Relatorio gerado apenas para simulacao.
