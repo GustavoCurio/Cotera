@@ -10,7 +10,8 @@ Receba propostas de fornecedores em PDF, transforme os documentos em dados e com
 
 ```mermaid
 flowchart LR
-    A["PDF / TXT"] --> B["Texto numerado"]
+    A["PDF / TXT"] --> O["Texto extraível ou OCR local"]
+    O --> B["Texto numerado + proveniência por página"]
     B --> C["Parser local"]
     B --> D["LLM opcional"]
     C --> E["Validação Pydantic + evidência por linha"]
@@ -23,6 +24,7 @@ flowchart LR
 ## Destaques técnicos
 
 - Parser local como padrão: demonstração e conferências funcionam sem chave de API.
+- OCR local gratuito com Tesseract (`por+eng`) para páginas escaneadas, com confiança por página e revisão humana obrigatória.
 - LLM opcional, exibido somente com `OPENAI_API_KEY` no ambiente ou em `st.secrets`, com autorização antes de enviar o texto.
 - Contratos Pydantic e conferência literal dos valores nas linhas citadas, com o texto disponível para revisão.
 - Recálculo com `Decimal` e `ROUND_HALF_UP`; propostas com pendências ficam fora da escolha e do menor custo elegível.
@@ -30,7 +32,7 @@ flowchart LR
 - SQLite com fallback para diretório temporário e adaptador PostgreSQL; exportação em HTML, CSV e JSON.
 - API FastAPI, workflow n8n importável e CI com Python 3.12 e 3.14 e serviço PostgreSQL.
 
-A qualidade da extração com LLM ainda não foi medida com um modelo real: não havia chave de API nas fontes verificadas nesta execução. Há um dataset variado de 36 propostas fictícias, avaliador do caminho real de IA e baseline local; os testes de métricas usam cliente simulado. Os relatórios distinguem essas situações.
+A qualidade da extração com LLM ainda não foi medida com um modelo real. As avaliações publicadas executam somente a baseline local, sem chamadas de API. Há um dataset variado de 36 propostas fictícias e dois casos OCR complementares; os testes de métricas usam cliente simulado. Os relatórios distinguem essas situações.
 
 ## Interface
 
@@ -40,7 +42,7 @@ A qualidade da extração com LLM ainda não foi medida com um modelo real: não
 |---|---|
 | ![Documento e linhas de origem na interface](docs/images/documentos.jpg) | ![Registro da decisão humana](docs/images/decisao.jpg) |
 
-**Stack:** Python 3.12+ · Streamlit · Pydantic · pypdf · Decimal · SQLite / PostgreSQL (psycopg) · FastAPI / Uvicorn · SDK OpenAI opcional · pytest · Docker Compose · n8n.
+**Stack:** Python 3.12+ · Streamlit · Pydantic · pypdf · pypdfium2 · Pillow · Tesseract / pytesseract · Decimal · SQLite / PostgreSQL (psycopg) · FastAPI / Uvicorn · SDK OpenAI opcional · pytest · Docker Compose · n8n.
 
 [Estudo de caso](docs/ESTUDO_DE_CASO.md) · [Arquitetura](docs/ARQUITETURA.md) · [Automação com n8n](docs/AUTOMACAO.md) · [Avaliação reproduzível](reports/evaluation.json)
 
@@ -68,6 +70,8 @@ A diferença entre Aurora e Prumo é uma comparação de valores fictícios, nã
 
 Os exemplos estão em [data/proposals](data/proposals). O [gerador dos documentos](scripts/create_samples.py) reproduz os PDFs e TXTs a partir de valores explícitos.
 
+O botão **Carregar exemplo escaneado** abre na demonstração uma versão só-imagem da proposta Aurora, processada localmente. Em **Documentos**, o PDF escaneado também pode ser baixado para conferir os valores. Os [três PDFs de OCR](data/scanned) incluem um exemplo limpo, outro com leve ruído/rotação e um arquivo em branco, que deve ser rejeitado.
+
 ## Como rodar localmente
 
 ### Instalação e interface
@@ -90,6 +94,16 @@ python3.12 -m venv .venv
 .venv/bin/python -m streamlit run app.py --server.port 8505 --server.showEmailPrompt false
 ```
 
+Para ler PDFs escaneados, instale também o executável Tesseract e os dados de português e inglês. Em Debian/Ubuntu:
+
+```bash
+sudo apt-get update
+sudo apt-get install -y tesseract-ocr tesseract-ocr-por
+tesseract --list-langs
+```
+
+A lista precisa conter `por` e `eng`. No Windows/macOS, disponibilize esses mesmos idiomas e o executável `tesseract` no `PATH`. As bibliotecas Python estão fixadas em `requirements.txt`. PDFs textuais e TXT continuam funcionando sem o executável; PDFs escaneados serão recusados com a mensagem de falta de texto selecionável se o OCR estiver indisponível. Docker e CI instalam o Tesseract automaticamente.
+
 Com [uv](https://docs.astral.sh/uv/), a versão e as dependências também podem ser selecionadas pelo projeto:
 
 ```bash
@@ -102,7 +116,7 @@ uv run --python 3.12 streamlit run app.py --server.port 8505
 2. Em **Advanced settings**, escolha **Python 3.12**.
 3. Publique sem configurar chave: a demonstração e o parser local funcionam assim. Use **Carregar exemplo** para abrir a cesta e as três propostas fictícias, inclusive ao sair de **Minhas cotações**.
 
-O [`requirements.txt`](requirements.txt) da raiz contém as dependências de execução e é o manifesto instalado pelo Cloud; `uv.lock` não é versionado. O [`pyproject.toml`](pyproject.toml) declara `requires-python = ">=3.12"` e lê as mesmas dependências. Veja a [documentação de dependências do Community Cloud](https://docs.streamlit.io/deploy/streamlit-community-cloud/deploy-your-app/app-dependencies).
+O [`requirements.txt`](requirements.txt) da raiz contém as dependências Python e o [`packages.txt`](packages.txt) instala `tesseract-ocr` e `tesseract-ocr-por` no Cloud; `uv.lock` não é versionado. O [`pyproject.toml`](pyproject.toml) declara `requires-python = ">=3.12"` e lê as mesmas dependências. Veja a [documentação de dependências do Community Cloud](https://docs.streamlit.io/deploy/streamlit-community-cloud/deploy-your-app/app-dependencies).
 
 Para habilitar IA, cadastre `OPENAI_API_KEY` nos **Secrets** do aplicativo ou no ambiente. Você também pode definir `OPENAI_MODEL`; se estiver ausente, a interface permite informar o modelo antes da extração. Sem chave, a opção de IA não aparece. Nunca versione credenciais: `.env` e `.streamlit/secrets.toml` estão no `.gitignore`. A [documentação de Secrets do Community Cloud](https://docs.streamlit.io/deploy/streamlit-community-cloud/deploy-your-app/secrets-management) explica a configuração no painel.
 
@@ -111,12 +125,12 @@ Para habilitar IA, cadastre `OPENAI_API_KEY` nos **Secrets** do aplicativo ou no
 | Recurso | Comportamento |
 |---|---|
 | Cesta de referência | Códigos únicos, quantidades e unidades validadas |
-| Leitura documental | PDF textual e TXT UTF-8, com linhas numeradas |
+| Leitura documental | PDF textual/escaneado e TXT UTF-8, com linhas numeradas e proveniência por página |
 | Extração local | Parser do modelo rotulado incluído no projeto |
 | Extração com IA | Texto numerado → JSON estruturado → validação de evidências |
 | Conferência | Cesta, completude, moeda, prazo e reconciliação do total |
 | Comparação | Mesmo conjunto de itens; menor custo entre elegíveis; empates preservados |
-| Decisão humana | Responsável, justificativa, valor e versão do conjunto |
+| Decisão humana | Responsável, justificativa, valor e versão; confirmação de revisão do original quando houver OCR |
 | Concorrência | Decisão desatualizada é recusada, sem sobrescrever o histórico |
 | Idempotência | Os mesmos bytes na mesma cotação não geram uma nova proposta |
 | Persistência | SQLite local; adaptador PostgreSQL pelo mesmo contrato |
@@ -142,7 +156,8 @@ Ausência permanece ausente. Frete ou desconto em branco não vira zero. Não h�
 | Limite | Valor |
 |---|---:|
 | Arquivo | Até 2 MiB |
-| PDF | Até cinco páginas, sem senha e com texto selecionável |
+| PDF | Até cinco páginas, sem senha; OCR local nas páginas com texto insuficiente |
+| OCR | Orçamento total padrão de 30 segundos por PDF, configurável por `COTERA_OCR_TIMEOUT_SECONDS` |
 | Texto | Até 25 mil caracteres e mil linhas |
 | Cesta pela API | Até vinte itens; formulário visual: até dez |
 | Propostas por cotação | Até dez |
@@ -151,7 +166,15 @@ O parser local aceita os rótulos e a tabela do [modelo TXT](data/proposals/auro
 
 Cada campo extraído precisa corresponder literalmente à linha citada. Números são comparados após leitura no formato brasileiro; `R$` também é evidência explícita de BRL. Essa verificação não comprova que o modelo associou cada número à coluna correta. O texto original permanece disponível para conferência.
 
-Os PDFs não são guardados no banco. O nome, o hash, o texto extraído e os dados estruturados são persistidos junto da proposta. O JSON exportado inclui esse texto. Não há OCR nesta versão.
+Cada página com menos de 30 caracteres alfanuméricos extraíveis passa por OCR local gratuito com Tesseract, via `pytesseract`, em português e inglês (`por+eng`). O `pypdfium2` renderiza somente essas páginas em escala de cinza, a 200 dpi, reduzindo páginas grandes para um lado máximo de 3000 pixels. Páginas estruturalmente vazias dispensam OCR; um documento sem texto reconhecido continua rejeitado. Um PDF misto preserva o texto extraível das demais páginas.
+
+O texto OCR recebe a **mesma numeração global de linhas e a mesma validação de evidências** do texto nativo. Em `document.pages`, ficam o número da página, `method` (`texto`/`ocr`), `ocr_confidence` (média das palavras, de 0 a 100; `null` quando não se aplica) e os limites inclusivos `start_line`/`end_line` (base um; `null` em páginas vazias). Documentos antigos sem esses metadados continuam legíveis. A interface exibe **Texto obtido por OCR**, com a confiança de cada página, em Documentos e Comparar; os relatórios preservam o alerta.
+
+A confiança do Tesseract **não é uma probabilidade de que os valores estejam corretos**. Dígitos, acentos, separadores de coluna e páginas tortas podem ser reconhecidos incorretamente. O parser local continua exigindo os rótulos do modelo Cotera; não corrige automaticamente o texto ou os valores. Evidência literal e total reconciliado também podem acompanhar erros de OCR. Por isso, `audit.requires_human_review` sinaliza a revisão obrigatória no PDF original, e o registro da escolha exige a confirmação na interface ou `ocr_reviewed=true` na API. As regras de cálculo/elegibilidade permanecem separadas desse alerta.
+
+O orçamento de OCR é compartilhado entre todas as páginas; cada processo Tesseract recebe somente o tempo restante. O tempo de importação, consulta de idiomas e renderização entra nesse orçamento, mas a renderização nativa não pode ser interrompida durante a chamada: o prazo é conferido antes e depois. O estouro de tempo rejeita a leitura inteira, sem aceitar uma proposta parcial. Sem `pytesseract`, Tesseract ou qualquer um dos idiomas necessários, o fluxo retorna a rejeição clara de PDF sem texto selecionável. Os limites de 2 MiB, cinco páginas, caracteres e linhas continuam valendo após OCR.
+
+Os PDFs não são guardados no banco. O nome, o hash, o texto extraído, a proveniência por página e os dados estruturados são persistidos junto da proposta; o JSON exportado inclui essas informações. Guarde o PDF original para a revisão. O OCR não envia imagens nem texto para serviços externos; o envio de texto à IA continua opcional e exige autorização.
 
 ### Extração com IA
 
@@ -173,7 +196,7 @@ O modo com IA admite outros layouts apenas quando consegue associar os valores a
 
 O [dataset rotulado](evals/llm/manifest.json) contém **36 propostas fictícias**, em 12 famílias de layout: 32 TXTs e 4 PDFs textuais. Inclui tabelas reordenadas, CSV, Markdown, narrativa, fichas, tabulação, rótulos em inglês, itens e descrições em várias linhas, ausências, BRL/USD/EUR, formatos brasileiro e americano, cabeçalhos/rodapés ruidosos, duplicatas, totais divergentes e quatro tentativas de injeção. Cada caso tem uma cesta e um gabarito compatível com `QuoteDraft`, com linhas de evidência. A [política de anotação](evals/llm/README.md) explica as limitações do contrato e como regenerar os documentos.
 
-**Execução real de IA pendente.** A busca no ambiente, no `.env` do projeto, nos perfis de shell e em `~/.config` não encontrou `OPENAI_API_KEY`. Nenhuma chamada a modelo real foi feita e nenhum resultado simulado foi publicado como medição de qualidade. Não foram usadas credenciais de login do Codex. O [relatório JSON](reports/llm_evaluation.json) e o [resumo em Markdown](reports/llm_evaluation.md) registram esse estado e a baseline local efetivamente executada nos mesmos 36 documentos.
+**Execução real de IA pendente.** Os relatórios publicados foram gerados com `--baseline-only`. Nenhuma chamada a modelo real foi feita e nenhum resultado simulado foi publicado como medição de qualidade. O [relatório JSON](reports/llm_evaluation.json) e o [resumo em Markdown](reports/llm_evaluation.md) registram esse estado e a baseline local efetivamente executada nos mesmos 36 documentos.
 
 Para reproduzir sem chave, inclusive na CI:
 
@@ -181,6 +204,16 @@ Para reproduzir sem chave, inclusive na CI:
 python -m evals.run_llm_eval --baseline-only
 python -m pytest tests/test_llm_eval.py -q
 ```
+
+A avaliação complementar de OCR tem [dois PDFs só-imagem e gabaritos independentes](evals/llm/scanned/manifest.json), separados dos 36 casos originais para manter a baseline padrão executável sem Tesseract. Com `por+eng` disponíveis:
+
+```bash
+.venv/bin/python scripts/create_scanned_samples.py
+.venv/bin/python -m evals.run_llm_eval --baseline-only \
+  --manifest evals/llm/scanned/manifest.json --output reports/ocr_evaluation.json
+```
+
+O [relatório OCR](reports/ocr_evaluation.md) registra os dois casos aceitos e os dois totais corretos pelo parser local, sem chamadas a modelo. É uma verificação sintética de integração; não mede precisão de OCR em documentos reais. Texto e confiança podem variar entre versões do Tesseract. O arquivo em branco é coberto nos testes de rejeição.
 
 Para medir modelos reais, defina uma chave própria no ambiente e informe os modelos exatos disponíveis na sua conta. O comando aceita `--model` repetido e compartilha o orçamento entre todos os modelos:
 
@@ -242,9 +275,11 @@ O `.env` é lido pelo Docker Compose. Na execução Python nativa, as variáveis
 .\.venv\Scripts\python.exe -m cotera evaluate
 ```
 
-Na validação desta alteração, em **Python 3.12.16 e 3.14.10: 74 testes passaram e 1 foi pulado em cada versão**. O teste de PostgreSQL foi pulado por não haver servidor disponível; ele é habilitado por `COTERA_TEST_POSTGRES_URL`. O [workflow de CI](.github/workflows/tests.yml) mantém as duas versões, configura um serviço PostgreSQL e executa a suíte, os testes de métricas com cliente simulado e as duas avaliações locais, sem exigir chave de IA. A execução de PostgreSQL e n8n/Compose não foi verificada nesta máquina.
+Na validação desta alteração, em **Python 3.13.5: 98 testes passaram e 1 foi pulado**, com Tesseract 5.5.0 e idiomas `por+eng`. O teste de PostgreSQL foi pulado por não haver servidor disponível; ele é habilitado por `COTERA_TEST_POSTGRES_URL`. O [workflow de CI](.github/workflows/tests.yml) mantém Python 3.12 e 3.14, configura um serviço PostgreSQL, instala Tesseract e executa a suíte e as avaliações locais, inclusive a baseline complementar de OCR, sem exigir chave de IA. As duas versões de Python da CI, PostgreSQL e n8n/Compose não foram executados nesta validação local.
 
 Os testes locais cobrem PDF/TXT, limites, números ambíguos, dados ausentes, evidências inválidas, arredondamento, deduplicação, transações, decisões concorrentes, exportação, API e os fluxos da interface. Também verificam a oferta de IA por chave em ambiente/segredos, o modo local inicial, o botão de exemplo, o fallback do SQLite e a ausência da chave nos dados persistidos/exportados.
+
+Os testes de OCR real são pulados se o executável ou os idiomas necessários não estiverem instalados. Os demais verificam degradação sem dependência/executável/idioma, orçamento compartilhado, limites de saída, geração determinística das fixtures, páginas mistas e revisão humana na interface/API. A regeneração usa Pillow e a fonte Vera fornecida pelo ReportLab, com semente e metadados fixos, sem fontes do sistema nem API.
 
 O [relatório de referência](reports/evaluation.json) registra **8/8 casos de conferência atendidos**: propostas completas, total incorreto, frete ausente, quantidade divergente, outra moeda, item repetido e item ausente. É um conjunto sintético de desenvolvimento; não demonstra precisão em documentos externos nem economia de horas em uma operação real.
 
@@ -274,6 +309,7 @@ O servidor também foi iniciado em Python 3.12 por pelo menos 15 segundos com `s
 | `app.py` | Entrypoint Streamlit: mesa de compras, documentos, decisão e exportação |
 | `pyproject.toml` / `requirements.txt` | Python mínimo, dependências e instalação no Cloud |
 | `cotera/documents.py` | PDF/TXT, parser local e verificação de evidências |
+| `cotera/ocr.py` | Renderização de páginas, Tesseract local e orçamento total de OCR |
 | `cotera/extraction.py` | Contrato e integração de extração com IA |
 | `cotera/comparison.py` | Cesta, cálculos e elegibilidade |
 | `cotera/service.py` | Fluxo de inclusão e deduplicação anterior ao provedor |
@@ -281,7 +317,7 @@ O servidor também foi iniciado em Python 3.12 por pelo menos 15 segundos com `s
 | `cotera/api.py` | Integração HTTP |
 | `cotera/reports.py` | HTML, CSV e JSON |
 | `cotera/evaluation.py` | Casos de referência reproduzíveis |
-| `evals/llm/` | 36 propostas fictícias, gabaritos, gerador e preços de referência |
+| `evals/llm/` | 36 propostas fictícias e dois casos OCR complementares, gabaritos, geradores e preços de referência |
 | `evals/run_llm_eval.py` | Avaliação do caminho real de IA e baseline local, com orçamento |
 | `evals/metrics.py` / `evals/budget.py` | Métricas, uso de tokens e controle de custo |
 | `reports/llm_evaluation.json` / `.md` | Estado da execução e resultados observados |

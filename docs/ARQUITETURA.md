@@ -19,7 +19,7 @@ flowchart LR
 
 A interface e a API chamam `service.add_document`. Esse serviço consulta a cesta, lê o documento e verifica se os bytes já foram recebidos antes de chamar a extração. A deduplicação é repetida no banco para proteger inclusões concorrentes.
 
-`documents.py` limita a entrada e define o parser do modelo local. `extraction.py` usa o mesmo contrato para a saída do provedor. `comparison.py` recebe dados validados e não realiza chamadas externas. A persistência não armazena cálculos fornecidos pelo cliente: cada fotografia recalcula a comparação a partir da cesta e das propostas imutáveis.
+`documents.py` limita a entrada e define o parser do modelo local. Páginas com texto insuficiente passam por `ocr.py`, que renderiza com pypdfium2 e executa Tesseract local (`por+eng`) via pytesseract com orçamento total de tempo. `extraction.py` usa o mesmo contrato para a saída do provedor. `comparison.py` recebe dados validados e não realiza chamadas externas. A persistência não armazena cálculos fornecidos pelo cliente: cada fotografia recalcula a comparação a partir da cesta e das propostas imutáveis.
 
 ## Valores e equivalência
 
@@ -30,6 +30,8 @@ O SKU é a chave de correspondência. Descrições semelhantes não são usadas 
 ## Origem dos campos
 
 O documento contém nome, hash dos bytes e texto por linhas. Campos de cabeçalho citam suas linhas em `evidence`; itens citam `source_line`. A validação exige que os valores ocorram na origem indicada, com normalização numérica explícita. Isso reduz valores sem suporte literal, mas não prova a associação semântica entre valor e campo.
+
+O texto nativo e o OCR compartilham a numeração global e a verificação de evidência. `document.pages` registra método, confiança média OCR e intervalo de linhas por página. A confiança não garante acerto de dígitos; `audit.requires_human_review` e `warnings` acompanham a comparação e as exportações. A decisão exige `ocr_reviewed=true` quando houver texto OCR, sem alterar os critérios financeiros de elegibilidade. Documentos antigos sem metadados continuam compatíveis, e o armazenamento mantém o mesmo esquema de tabelas.
 
 Um PDF pode ter suas células extraídas em linhas diferentes. O modo com IA não reúne evidências de várias linhas para um item nesta versão. Nessas situações a extração pode permanecer incompleta e a proposta fica pendente.
 

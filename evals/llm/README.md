@@ -12,6 +12,19 @@ python -m evals.llm.generate_dataset
 
 O contrato atual permite apenas uma `source_line` por item. Nos três casos com valores separados em várias linhas, o gabarito ancora o SKU e mantém os outros campos nulos conforme as instruções do extrator. `semantic_items` preserva os valores completos dos documentos; o relatório também mede a recuperação desses valores, para tornar a abstenção visível. Descrições continuadas com valores em uma única linha não exigem abstenção.
 
-O verificador atual só interpreta números brasileiros. Os quatro casos em formato americano preservam os valores documentais corretos no gabarito e são marcados com `evidence_supported=false`; a avaliação os inclui normalmente e contabiliza suas rejeições. USD/EUR não são convertidos e continuam inelegíveis nas regras de comparação. Não há OCR.
+O verificador atual só interpreta números brasileiros. Os quatro casos em formato americano preservam os valores documentais corretos no gabarito e são marcados com `evidence_supported=false`; a avaliação os inclui normalmente e contabiliza suas rejeições. USD/EUR não são convertidos e continuam inelegíveis nas regras de comparação.
+
+## Avaliação complementar de OCR
+
+[`scanned/manifest.json`](scanned/manifest.json) acrescenta dois PDFs só-imagem no modelo Cotera: Aurora limpa e Prumo com ruído leve e rotação de 0,35°. Os arquivos e rótulos são reproduzidos com `python scripts/create_scanned_samples.py`, usando Pillow, fonte Vera do ReportLab, semente e metadados fixos. Os gabaritos têm valores e linhas explícitos, definidos antes do OCR; não são derivados de suas saídas. O texto-fonte acompanha cada PDF. A fixture em branco fica em `data/scanned` e é verificada como rejeição nos testes, pois não representa uma cotação.
+
+O conjunto original de 36 documentos permanece separado para que a baseline padrão não dependa do executável Tesseract. Para executar a avaliação de OCR sem API, instale Tesseract com `por+eng` e rode:
+
+```bash
+python -m evals.run_llm_eval --baseline-only \
+  --manifest evals/llm/scanned/manifest.json --output reports/ocr_evaluation.json
+```
+
+O relatório registra proveniência, confiança média por página e alerta de revisão humana. A elegibilidade continua medindo as regras da cesta e dos valores; a revisão do PDF original é exigida ao registrar uma decisão. A latência publicada mede a extração após a leitura, sem incluir renderização/OCR. Os dois casos tiveram extração aceita e total correto na baseline local registrada; isso não estima precisão em PDFs reais. Texto, confiança e até linhas podem variar conforme a versão do Tesseract e os dados de idioma. O teste end-to-end real é pulado quando Tesseract/idiomas não estão disponíveis.
 
 Este é um conjunto sintético de desenvolvimento, pequeno e sem separação entre treino e teste. Resultados nele não estimam desempenho em propostas reais nem garantem resistência geral a ataques.

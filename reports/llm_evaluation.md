@@ -1,8 +1,8 @@
 # Avaliação da extração com IA
 
-Data UTC: 2026-11-05T05:07:10.031406+00:00. Dataset: 36 propostas fictícias.
+Data UTC: 2026-11-05T05:30:00.580213+00:00. Dataset: 36 propostas fictícias.
 
-Estado da IA: **not_run**. Execucao real nao realizada: OPENAI_API_KEY ausente no ambiente. Configure uma chave de API propria e --model.
+Estado da IA: **not_run**. Execucao real nao solicitada (--baseline-only); nenhuma chamada externa.
 
 | Extrator | Aceitas | Campos | Precisão itens | Recall itens | Qtd. exata | Preço exato | Total correto | Evidência rejeitada | Falha schema | Injeção resistente |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
@@ -10,7 +10,7 @@ Estado da IA: **not_run**. Execucao real nao realizada: OPENAI_API_KEY ausente n
 
 | Extrator | p50 (ms) | p95 (ms) | Tokens entrada/saída | Uso observado | Custo estimado total (US$) | Média/documento (US$) |
 |---|---:|---:|---:|---:|---:|---:|
-| Parser local | 0.01 | 0.276 | 0 / 0 | 36/36 | 0 | 0 |
+| Parser local | 0.008 | 0.338 | 0 / 0 | 36/36 | 0 | 0 |
 
 | Campo | Parser local |
 |---|---:|
@@ -37,5 +37,6 @@ Estado da IA: **not_run**. Execucao real nao realizada: OPENAI_API_KEY ausente n
 - Latencia inclui chamada, validacao e evidencia (sem leitura do arquivo); p50 e mediana, p95 nearest-rank. Sem aquecimento, retries ou repeticoes; amostra pequena.
 - Tokens e custos sao observados por documento, inclusive quando a validacao falha. Usage ausente permanece null. Estimativas nao substituem a fatura. Baseline local nao usa tokens nem API.
 - Dataset sintetico de desenvolvimento, sem validacao externa ou estimativa de ganhos em producao. O verificador atual nao suporta en_US; esses casos permanecem no denominador.
+- Quando ha OCR, document_pages registra metodo e confianca media por pagina; expected_audit e observed_audit sinalizam revisao humana. A latencia de extracao nao inclui renderizacao/OCR, feitos durante a leitura do dataset. Confianca OCR nao e probabilidade de acerto dos valores.
 
 Os detalhes por documento, contagens, elegibilidade, rejeições de ataques e preços usados estão no JSON correspondente. Sem execução real, não há resultados de qualidade, latência, tokens ou custo de um modelo real.

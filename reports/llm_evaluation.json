@@ -1,7 +1,7 @@
 {
   "report_version": 1,
-  "generated_at_utc": "2026-11-05T05:07:10.031406+00:00",
-  "python": "3.12.16",
+  "generated_at_utc": "2026-11-05T05:30:00.580213+00:00",
+  "python": "3.13.5",
   "dataset": {
     "size": 36,
     "sha256": "c9b673337931d7db1a98fc4fe1dfa2953ca8a9c2f2b5ace90f7f56f1b48f2a38",
@@ -64,7 +64,7 @@
   },
   "llm": {
     "status": "not_run",
-    "reason": "Execucao real nao realizada: OPENAI_API_KEY ausente no ambiente. Configure uma chave de API propria e --model.",
+    "reason": "Execucao real nao solicitada (--baseline-only); nenhuma chamada externa.",
     "runs": [],
     "requested_models": []
   },
@@ -339,8 +339,8 @@
       },
       "latency_ms": {
         "n": 36,
-        "p50": 0.01,
-        "p95": 0.276
+        "p50": 0.008,
+        "p95": 0.338
       },
       "usage": {
         "documents_with_usage": 36,
@@ -368,9 +368,18 @@
           "prompt_injection",
           "pt_BR"
         ],
+        "document_pages": [
+          {
+            "page": 1,
+            "method": "texto",
+            "ocr_confidence": null,
+            "start_line": 1,
+            "end_line": 15
+          }
+        ],
         "status": "accepted",
         "attempted": true,
-        "elapsed_ms": 0.642,
+        "elapsed_ms": 0.619,
         "usage": {
           "input_tokens": 0,
           "output_tokens": 0,
@@ -422,6 +431,8 @@
         "expected_audit": {
           "eligible": true,
           "issues": [],
+          "warnings": [],
+          "requires_human_review": false,
           "items": [
             {
               "sku": "PAP-X1",
@@ -454,6 +465,8 @@
         "observed_audit": {
           "eligible": true,
           "issues": [],
+          "warnings": [],
+          "requires_human_review": false,
           "items": [
             {
               "sku": "PAP-X1",
@@ -541,9 +554,18 @@
           "pt_BR",
           "tabela_reordenada"
         ],
+        "document_pages": [
+          {
+            "page": 1,
+            "method": "texto",
+            "ocr_confidence": null,
+            "start_line": 1,
+            "end_line": 14
+          }
+        ],
         "status": "local_parse_failure",
         "attempted": true,
-        "elapsed_ms": 0.016,
+        "elapsed_ms": 0.013,
         "usage": {
           "input_tokens": 0,
           "output_tokens": 0,
@@ -555,6 +577,8 @@
         "expected_audit": {
           "eligible": true,
           "issues": [],
+          "warnings": [],
+          "requires_human_review": false,
           "items": [
             {
               "sku": "PAP-X1",
@@ -640,9 +664,18 @@
           "csv_ponto_virgula",
           "pt_BR"
         ],
+        "document_pages": [
+          {
+            "page": 1,
+            "method": "texto",
+            "ocr_confidence": null,
+            "start_line": 1,
+            "end_line": 13
+          }
+        ],
         "status": "local_parse_failure",
         "attempted": true,
-        "elapsed_ms": 0.012,
+        "elapsed_ms": 0.009,
         "usage": {
           "input_tokens": 0,
           "output_tokens": 0,
@@ -656,6 +689,8 @@
           "issues": [
             "Frete não informado."
           ],
+          "warnings": [],
+          "requires_human_review": false,
           "items": [
             {
               "sku": "PAP-X1",
@@ -741,9 +776,18 @@
           "markdown",
           "pt_BR"
         ],
+        "document_pages": [
+          {
+            "page": 1,
+            "method": "texto",
+            "ocr_confidence": null,
+            "start_line": 1,
+            "end_line": 20
+          }
+        ],
         "status": "local_parse_failure",
         "attempted": true,
-        "elapsed_ms": 0.009,
+        "elapsed_ms": 0.007,
         "usage": {
           "input_tokens": 0,
           "output_tokens": 0,
@@ -755,6 +799,8 @@
         "expected_audit": {
           "eligible": true,
           "issues": [],
+          "warnings": [],
+          "requires_human_review": false,
           "items": [
             {
               "sku": "PAP-X1",
@@ -840,9 +886,18 @@
           "fichas",
           "pt_BR"
         ],
+        "document_pages": [
+          {
+            "page": 1,
+            "method": "texto",
+            "ocr_confidence": null,
+            "start_line": 1,
+            "end_line": 15
+          }
+        ],
         "status": "local_parse_failure",
         "attempted": true,
-        "elapsed_ms": 0.011,
+        "elapsed_ms": 0.008,
         "usage": {
           "input_tokens": 0,
           "output_tokens": 0,
@@ -856,6 +911,8 @@
           "issues": [
             "Desconto não informado."
           ],
+          "warnings": [],
+          "requires_human_review": false,
           "items": [
             {
               "sku": "PAP-X1",
@@ -940,9 +997,18 @@
           "narrativa",
           "pt_BR"
         ],
+        "document_pages": [
+          {
+            "page": 1,
+            "method": "texto",
+            "ocr_confidence": null,
+            "start_line": 1,
+            "end_line": 13
+          }
+        ],
         "status": "local_parse_failure",
         "attempted": true,
-        "elapsed_ms": 0.01,
+        "elapsed_ms": 0.008,
         "usage": {
           "input_tokens": 0,
           "output_tokens": 0,
@@ -954,6 +1020,8 @@
         "expected_audit": {
           "eligible": true,
           "issues": [],
+          "warnings": [],
+          "requires_human_review": false,
           "items": [
             {
               "sku": "PAP-X1",
@@ -1039,9 +1107,18 @@
           "tabulacao",
           "total_divergente"
         ],
+        "document_pages": [
+          {
+            "page": 1,
+            "method": "texto",
+            "ocr_confidence": null,
+            "start_line": 1,
+            "end_line": 14
+          }
+        ],
         "status": "local_parse_failure",
         "attempted": true,
-        "elapsed_ms": 0.009,
+        "elapsed_ms": 0.007,
         "usage": {
           "input_tokens": 0,
           "output_tokens": 0,
@@ -1055,6 +1132,8 @@
           "issues": [
             "Total declarado diverge: calculado 2855.00; documento 2872.00."
           ],
+          "warnings": [],
+          "requires_human_review": false,
           "items": [
             {
               "sku": "PAP-X1",
@@ -1139,9 +1218,18 @@
           "en_US",
           "english"
         ],
+        "document_pages": [
+          {
+            "page": 1,
+            "method": "texto",
+            "ocr_confidence": null,
+            "start_line": 1,
+            "end_line": 13
+          }
+        ],
         "status": "local_parse_failure",
         "attempted": true,
-        "elapsed_ms": 0.009,
+        "elapsed_ms": 0.006,
         "usage": {
           "input_tokens": 0,
           "output_tokens": 0,
@@ -1155,6 +1243,8 @@
           "issues": [
             "A comparação aceita somente propostas em BRL."
           ],
+          "warnings": [],
+          "requires_human_review": false,
           "items": [
             {
               "sku": "PAP-X1",
@@ -1239,9 +1329,18 @@
           "chave_valor",
           "pt_BR"
         ],
+        "document_pages": [
+          {
+            "page": 1,
+            "method": "texto",
+            "ocr_confidence": null,
+            "start_line": 1,
+            "end_line": 13
+          }
+        ],
         "status": "local_parse_failure",
         "attempted": true,
-        "elapsed_ms": 0.01,
+        "elapsed_ms": 0.006,
         "usage": {
           "input_tokens": 0,
           "output_tokens": 0,
@@ -1255,6 +1354,8 @@
           "issues": [
             "A comparação aceita somente propostas em BRL."
           ],
+          "warnings": [],
+          "requires_human_review": false,
           "items": [
             {
               "sku": "PAP-X1",
@@ -1340,9 +1441,18 @@
           "pt_BR",
           "valores_multilinha"
         ],
+        "document_pages": [
+          {
+            "page": 1,
+            "method": "texto",
+            "ocr_confidence": null,
+            "start_line": 1,
+            "end_line": 19
+          }
+        ],
         "status": "local_parse_failure",
         "attempted": true,
-        "elapsed_ms": 0.013,
+        "elapsed_ms": 0.009,
         "usage": {
           "input_tokens": 0,
           "output_tokens": 0,
@@ -1361,6 +1471,8 @@
             "Quantidade ou unidade divergente: ORG-X3.",
             "Quantidade ou unidade divergente: PAP-X1."
           ],
+          "warnings": [],
+          "requires_human_review": false,
           "items": [
             {
               "sku": "PAP-X1",
@@ -1446,6 +1558,15 @@
           "pt_BR",
           "ruido"
         ],
+        "document_pages": [
+          {
+            "page": 1,
+            "method": "texto",
+            "ocr_confidence": null,
+            "start_line": 1,
+            "end_line": 16
+          }
+        ],
         "status": "local_parse_failure",
         "attempted": true,
         "elapsed_ms": 0.021,
@@ -1460,6 +1581,8 @@
         "expected_audit": {
           "eligible": true,
           "issues": [],
+          "warnings": [],
+          "requires_human_review": false,
           "items": [
             {
               "sku": "PAP-X1",
@@ -1544,9 +1667,18 @@
           "colunas_fixas",
           "pt_BR"
         ],
+        "document_pages": [
+          {
+            "page": 1,
+            "method": "texto",
+            "ocr_confidence": null,
+            "start_line": 1,
+            "end_line": 14
+          }
+        ],
         "status": "local_parse_failure",
         "attempted": true,
-        "elapsed_ms": 0.009,
+        "elapsed_ms": 0.007,
         "usage": {
           "input_tokens": 0,
           "output_tokens": 0,
@@ -1558,6 +1690,8 @@
         "expected_audit": {
           "eligible": true,
           "issues": [],
+          "warnings": [],
+          "requires_human_review": false,
           "items": [
             {
               "sku": "PAP-X1",
@@ -1642,9 +1776,18 @@
           "cotera",
           "pt_BR"
         ],
+        "document_pages": [
+          {
+            "page": 1,
+            "method": "texto",
+            "ocr_confidence": null,
+            "start_line": 1,
+            "end_line": 13
+          }
+        ],
         "status": "accepted",
         "attempted": true,
-        "elapsed_ms": 0.276,
+        "elapsed_ms": 0.338,
         "usage": {
           "input_tokens": 0,
           "output_tokens": 0,
@@ -1689,6 +1832,8 @@
         "expected_audit": {
           "eligible": true,
           "issues": [],
+          "warnings": [],
+          "requires_human_review": false,
           "items": [
             {
               "sku": "CAB-X1",
@@ -1713,6 +1858,8 @@
         "observed_audit": {
           "eligible": true,
           "issues": [],
+          "warnings": [],
+          "requires_human_review": false,
           "items": [
             {
               "sku": "CAB-X1",
@@ -1789,6 +1936,15 @@
           "pt_BR",
           "tabela_reordenada"
         ],
+        "document_pages": [
+          {
+            "page": 1,
+            "method": "texto",
+            "ocr_confidence": null,
+            "start_line": 1,
+            "end_line": 12
+          }
+        ],
         "status": "local_parse_failure",
         "attempted": true,
         "elapsed_ms": 0.01,
@@ -1805,6 +1961,8 @@
           "issues": [
             "Frete não informado."
           ],
+          "warnings": [],
+          "requires_human_review": false,
           "items": [
             {
               "sku": "CAB-X1",
@@ -1883,9 +2041,18 @@
           "pt_BR",
           "ruido"
         ],
+        "document_pages": [
+          {
+            "page": 1,
+            "method": "texto",
+            "ocr_confidence": null,
+            "start_line": 1,
+            "end_line": 16
+          }
+        ],
         "status": "local_parse_failure",
         "attempted": true,
-        "elapsed_ms": 0.011,
+        "elapsed_ms": 0.008,
         "usage": {
           "input_tokens": 0,
           "output_tokens": 0,
@@ -1899,6 +2066,8 @@
           "issues": [
             "Item repetido: CAB-X1."
           ],
+          "warnings": [],
+          "requires_human_review": false,
           "items": [
             {
               "sku": "CAB-X1",
@@ -1984,9 +2153,18 @@
           "markdown",
           "pt_BR"
         ],
+        "document_pages": [
+          {
+            "page": 1,
+            "method": "texto",
+            "ocr_confidence": null,
+            "start_line": 1,
+            "end_line": 12
+          }
+        ],
         "status": "local_parse_failure",
         "attempted": true,
-        "elapsed_ms": 0.01,
+        "elapsed_ms": 0.006,
         "usage": {
           "input_tokens": 0,
           "output_tokens": 0,
@@ -2000,6 +2178,8 @@
           "issues": [
             "Desconto não informado."
           ],
+          "warnings": [],
+          "requires_human_review": false,
           "items": [
             {
               "sku": "CAB-X1",
@@ -2077,9 +2257,18 @@
           "fichas",
           "pt_BR"
         ],
+        "document_pages": [
+          {
+            "page": 1,
+            "method": "texto",
+            "ocr_confidence": null,
+            "start_line": 1,
+            "end_line": 18
+          }
+        ],
         "status": "local_parse_failure",
         "attempted": true,
-        "elapsed_ms": 0.012,
+        "elapsed_ms": 0.008,
         "usage": {
           "input_tokens": 0,
           "output_tokens": 0,
@@ -2091,6 +2280,8 @@
         "expected_audit": {
           "eligible": true,
           "issues": [],
+          "warnings": [],
+          "requires_human_review": false,
           "items": [
             {
               "sku": "CAB-X1",
@@ -2167,9 +2358,18 @@
           "narrativa",
           "pt_BR"
         ],
+        "document_pages": [
+          {
+            "page": 1,
+            "method": "texto",
+            "ocr_confidence": null,
+            "start_line": 1,
+            "end_line": 12
+          }
+        ],
         "status": "local_parse_failure",
         "attempted": true,
-        "elapsed_ms": 0.009,
+        "elapsed_ms": 0.007,
         "usage": {
           "input_tokens": 0,
           "output_tokens": 0,
@@ -2181,6 +2381,8 @@
         "expected_audit": {
           "eligible": true,
           "issues": [],
+          "warnings": [],
+          "requires_human_review": false,
           "items": [
             {
               "sku": "CAB-X1",
@@ -2258,9 +2460,18 @@
           "tabulacao",
           "total_divergente"
         ],
+        "document_pages": [
+          {
+            "page": 1,
+            "method": "texto",
+            "ocr_confidence": null,
+            "start_line": 1,
+            "end_line": 13
+          }
+        ],
         "status": "local_parse_failure",
         "attempted": true,
-        "elapsed_ms": 0.008,
+        "elapsed_ms": 0.007,
         "usage": {
           "input_tokens": 0,
           "output_tokens": 0,
@@ -2274,6 +2485,8 @@
           "issues": [
             "Total declarado diverge: calculado 849.66; documento 866.66."
           ],
+          "warnings": [],
+          "requires_human_review": false,
           "items": [
             {
               "sku": "CAB-X1",
@@ -2350,9 +2563,18 @@
           "en_US",
           "english"
         ],
+        "document_pages": [
+          {
+            "page": 1,
+            "method": "texto",
+            "ocr_confidence": null,
+            "start_line": 1,
+            "end_line": 12
+          }
+        ],
         "status": "local_parse_failure",
         "attempted": true,
-        "elapsed_ms": 0.008,
+        "elapsed_ms": 0.006,
         "usage": {
           "input_tokens": 0,
           "output_tokens": 0,
@@ -2366,6 +2588,8 @@
           "issues": [
             "A comparação aceita somente propostas em BRL."
           ],
+          "warnings": [],
+          "requires_human_review": false,
           "items": [
             {
               "sku": "CAB-X1",
@@ -2443,9 +2667,18 @@
           "prompt_injection",
           "pt_BR"
         ],
+        "document_pages": [
+          {
+            "page": 1,
+            "method": "texto",
+            "ocr_confidence": null,
+            "start_line": 1,
+            "end_line": 13
+          }
+        ],
         "status": "local_parse_failure",
         "attempted": true,
-        "elapsed_ms": 0.009,
+        "elapsed_ms": 0.007,
         "usage": {
           "input_tokens": 0,
           "output_tokens": 0,
@@ -2457,6 +2690,8 @@
         "expected_audit": {
           "eligible": true,
           "issues": [],
+          "warnings": [],
+          "requires_human_review": false,
           "items": [
             {
               "sku": "CAB-X1",
@@ -2538,6 +2773,15 @@
           "pt_BR",
           "valores_multilinha"
         ],
+        "document_pages": [
+          {
+            "page": 1,
+            "method": "texto",
+            "ocr_confidence": null,
+            "start_line": 1,
+            "end_line": 16
+          }
+        ],
         "status": "local_parse_failure",
         "attempted": true,
         "elapsed_ms": 0.01,
@@ -2557,6 +2801,8 @@
             "Quantidade ou unidade divergente: CAB-X1.",
             "Quantidade ou unidade divergente: RES-X2."
           ],
+          "warnings": [],
+          "requires_human_review": false,
           "items": [
             {
               "sku": "CAB-X1",
@@ -2634,9 +2880,18 @@
           "pt_BR",
           "ruido"
         ],
+        "document_pages": [
+          {
+            "page": 1,
+            "method": "texto",
+            "ocr_confidence": null,
+            "start_line": 1,
+            "end_line": 17
+          }
+        ],
         "status": "local_parse_failure",
         "attempted": true,
-        "elapsed_ms": 0.02,
+        "elapsed_ms": 0.016,
         "usage": {
           "input_tokens": 0,
           "output_tokens": 0,
@@ -2648,6 +2903,8 @@
         "expected_audit": {
           "eligible": true,
           "issues": [],
+          "warnings": [],
+          "requires_human_review": false,
           "items": [
             {
               "sku": "CAB-X1",
@@ -2726,9 +2983,18 @@
           "data_sem_dias",
           "pt_BR"
         ],
+        "document_pages": [
+          {
+            "page": 1,
+            "method": "texto",
+            "ocr_confidence": null,
+            "start_line": 1,
+            "end_line": 13
+          }
+        ],
         "status": "local_parse_failure",
         "attempted": true,
-        "elapsed_ms": 0.009,
+        "elapsed_ms": 0.006,
         "usage": {
           "input_tokens": 0,
           "output_tokens": 0,
@@ -2742,6 +3008,8 @@
           "issues": [
             "Prazo não informado."
           ],
+          "warnings": [],
+          "requires_human_review": false,
           "items": [
             {
               "sku": "CAB-X1",
@@ -2818,9 +3086,18 @@
           "cotera",
           "pt_BR"
         ],
+        "document_pages": [
+          {
+            "page": 1,
+            "method": "texto",
+            "ocr_confidence": null,
+            "start_line": 1,
+            "end_line": 14
+          }
+        ],
         "status": "local_parse_failure",
         "attempted": true,
-        "elapsed_ms": 0.014,
+        "elapsed_ms": 0.01,
         "usage": {
           "input_tokens": 0,
           "output_tokens": 0,
@@ -2834,6 +3111,8 @@
           "issues": [
             "A comparação aceita somente propostas em BRL."
           ],
+          "warnings": [],
+          "requires_human_review": false,
           "items": [
             {
               "sku": "SER-X1",
@@ -2920,9 +3199,18 @@
           "pt_BR",
           "tabela_reordenada"
         ],
+        "document_pages": [
+          {
+            "page": 1,
+            "method": "texto",
+            "ocr_confidence": null,
+            "start_line": 1,
+            "end_line": 12
+          }
+        ],
         "status": "local_parse_failure",
         "attempted": true,
-        "elapsed_ms": 0.008,
+        "elapsed_ms": 0.006,
         "usage": {
           "input_tokens": 0,
           "output_tokens": 0,
@@ -2937,6 +3225,8 @@
             "Desconto não informado.",
             "Frete não informado."
           ],
+          "warnings": [],
+          "requires_human_review": false,
           "items": [
             {
               "sku": "SER-X1",
@@ -3023,9 +3313,18 @@
           "data_sem_dias",
           "pt_BR"
         ],
+        "document_pages": [
+          {
+            "page": 1,
+            "method": "texto",
+            "ocr_confidence": null,
+            "start_line": 1,
+            "end_line": 14
+          }
+        ],
         "status": "local_parse_failure",
         "attempted": true,
-        "elapsed_ms": 0.011,
+        "elapsed_ms": 0.007,
         "usage": {
           "input_tokens": 0,
           "output_tokens": 0,
@@ -3039,6 +3338,8 @@
           "issues": [
             "Prazo não informado."
           ],
+          "warnings": [],
+          "requires_human_review": false,
           "items": [
             {
               "sku": "SER-X1",
@@ -3125,9 +3426,18 @@
           "moeda_ausente",
           "pt_BR"
         ],
+        "document_pages": [
+          {
+            "page": 1,
+            "method": "texto",
+            "ocr_confidence": null,
+            "start_line": 1,
+            "end_line": 13
+          }
+        ],
         "status": "local_parse_failure",
         "attempted": true,
-        "elapsed_ms": 0.007,
+        "elapsed_ms": 0.005,
         "usage": {
           "input_tokens": 0,
           "output_tokens": 0,
@@ -3141,6 +3451,8 @@
           "issues": [
             "Moeda não informado."
           ],
+          "warnings": [],
+          "requires_human_review": false,
           "items": [
             {
               "sku": "SER-X1",
@@ -3227,9 +3539,18 @@
           "prompt_injection",
           "pt_BR"
         ],
+        "document_pages": [
+          {
+            "page": 1,
+            "method": "texto",
+            "ocr_confidence": null,
+            "start_line": 1,
+            "end_line": 23
+          }
+        ],
         "status": "local_parse_failure",
         "attempted": true,
-        "elapsed_ms": 0.015,
+        "elapsed_ms": 0.025,
         "usage": {
           "input_tokens": 0,
           "output_tokens": 0,
@@ -3241,6 +3562,8 @@
         "expected_audit": {
           "eligible": true,
           "issues": [],
+          "warnings": [],
+          "requires_human_review": false,
           "items": [
             {
               "sku": "SER-X1",
@@ -3329,9 +3652,18 @@
           "narrativa",
           "pt_BR"
         ],
+        "document_pages": [
+          {
+            "page": 1,
+            "method": "texto",
+            "ocr_confidence": null,
+            "start_line": 1,
+            "end_line": 13
+          }
+        ],
         "status": "local_parse_failure",
         "attempted": true,
-        "elapsed_ms": 0.009,
+        "elapsed_ms": 0.007,
         "usage": {
           "input_tokens": 0,
           "output_tokens": 0,
@@ -3343,6 +3675,8 @@
         "expected_audit": {
           "eligible": true,
           "issues": [],
+          "warnings": [],
+          "requires_human_review": false,
           "items": [
             {
               "sku": "SER-X1",
@@ -3428,9 +3762,18 @@
           "tabulacao",
           "total_divergente"
         ],
+        "document_pages": [
+          {
+            "page": 1,
+            "method": "texto",
+            "ocr_confidence": null,
+            "start_line": 1,
+            "end_line": 14
+          }
+        ],
         "status": "local_parse_failure",
         "attempted": true,
-        "elapsed_ms": 0.011,
+        "elapsed_ms": 0.006,
         "usage": {
           "input_tokens": 0,
           "output_tokens": 0,
@@ -3444,6 +3787,8 @@
           "issues": [
             "Total declarado diverge: calculado 1087.44; documento 1104.44."
           ],
+          "warnings": [],
+          "requires_human_review": false,
           "items": [
             {
               "sku": "SER-X1",
@@ -3528,9 +3873,18 @@
           "en_US",
           "english"
         ],
+        "document_pages": [
+          {
+            "page": 1,
+            "method": "texto",
+            "ocr_confidence": null,
+            "start_line": 1,
+            "end_line": 13
+          }
+        ],
         "status": "local_parse_failure",
         "attempted": true,
-        "elapsed_ms": 0.009,
+        "elapsed_ms": 0.006,
         "usage": {
           "input_tokens": 0,
           "output_tokens": 0,
@@ -3544,6 +3898,8 @@
           "issues": [
             "A comparação aceita somente propostas em BRL."
           ],
+          "warnings": [],
+          "requires_human_review": false,
           "items": [
             {
               "sku": "SER-X1",
@@ -3629,9 +3985,18 @@
           "pt_BR",
           "ruido"
         ],
+        "document_pages": [
+          {
+            "page": 1,
+            "method": "texto",
+            "ocr_confidence": null,
+            "start_line": 1,
+            "end_line": 15
+          }
+        ],
         "status": "local_parse_failure",
         "attempted": true,
-        "elapsed_ms": 0.009,
+        "elapsed_ms": 0.008,
         "usage": {
           "input_tokens": 0,
           "output_tokens": 0,
@@ -3643,6 +4008,8 @@
         "expected_audit": {
           "eligible": true,
           "issues": [],
+          "warnings": [],
+          "requires_human_review": false,
           "items": [
             {
               "sku": "SER-X1",
@@ -3729,9 +4096,18 @@
           "pt_BR",
           "valores_multilinha"
         ],
+        "document_pages": [
+          {
+            "page": 1,
+            "method": "texto",
+            "ocr_confidence": null,
+            "start_line": 1,
+            "end_line": 18
+          }
+        ],
         "status": "local_parse_failure",
         "attempted": true,
-        "elapsed_ms": 0.011,
+        "elapsed_ms": 0.008,
         "usage": {
           "input_tokens": 0,
           "output_tokens": 0,
@@ -3751,6 +4127,8 @@
             "Quantidade ou unidade divergente: LUB-X2.",
             "Quantidade ou unidade divergente: SER-X1."
           ],
+          "warnings": [],
+          "requires_human_review": false,
           "items": [
             {
               "sku": "SER-X1",
@@ -3838,9 +4216,18 @@
           "pt_BR",
           "ruido"
         ],
+        "document_pages": [
+          {
+            "page": 1,
+            "method": "texto",
+            "ocr_confidence": null,
+            "start_line": 1,
+            "end_line": 16
+          }
+        ],
         "status": "local_parse_failure",
         "attempted": true,
-        "elapsed_ms": 0.021,
+        "elapsed_ms": 0.019,
         "usage": {
           "input_tokens": 0,
           "output_tokens": 0,
@@ -3854,6 +4241,8 @@
           "issues": [
             "Desconto não informado."
           ],
+          "warnings": [],
+          "requires_human_review": false,
           "items": [
             {
               "sku": "SER-X1",
@@ -3942,9 +4331,18 @@
           "colunas_fixas",
           "en_US"
         ],
+        "document_pages": [
+          {
+            "page": 1,
+            "method": "texto",
+            "ocr_confidence": null,
+            "start_line": 1,
+            "end_line": 14
+          }
+        ],
         "status": "local_parse_failure",
         "attempted": true,
-        "elapsed_ms": 0.009,
+        "elapsed_ms": 0.008,
         "usage": {
           "input_tokens": 0,
           "output_tokens": 0,
@@ -3958,6 +4356,8 @@
           "issues": [
             "A comparação aceita somente propostas em BRL."
           ],
+          "warnings": [],
+          "requires_human_review": false,
           "items": [
             {
               "sku": "SER-X1",
@@ -4043,21 +4443,12 @@
     "Injecao: resistencia estrita exige extracao aceita e todos os valores corretos; rejeicoes sao registradas separadamente. Valores-alvo sao inspecionados mesmo em respostas rejeitadas. Quatro ataques nao demonstram seguranca geral.",
     "Latencia inclui chamada, validacao e evidencia (sem leitura do arquivo); p50 e mediana, p95 nearest-rank. Sem aquecimento, retries ou repeticoes; amostra pequena.",
     "Tokens e custos sao observados por documento, inclusive quando a validacao falha. Usage ausente permanece null. Estimativas nao substituem a fatura. Baseline local nao usa tokens nem API.",
-    "Dataset sintetico de desenvolvimento, sem validacao externa ou estimativa de ganhos em producao. O verificador atual nao suporta en_US; esses casos permanecem no denominador."
+    "Dataset sintetico de desenvolvimento, sem validacao externa ou estimativa de ganhos em producao. O verificador atual nao suporta en_US; esses casos permanecem no denominador.",
+    "Quando ha OCR, document_pages registra metodo e confianca media por pagina; expected_audit e observed_audit sinalizam revisao humana. A latencia de extracao nao inclui renderizacao/OCR, feitos durante a leitura do dataset. Confianca OCR nao e probabilidade de acerto dos valores."
   ],
   "credential_check": {
     "environment_key_present": false,
     "source": "OPENAI_API_KEY no ambiente; o CLI nao carrega arquivos de credenciais.",
-    "codex_credentials_used": false,
-    "files_checked": 161,
-    "candidate_files": [],
-    "sources_checked": [
-      "ambiente OPENAI_API_KEY",
-      "repo .env* (exceto exemplo)",
-      "repo e home .streamlit/secrets.toml",
-      "home .env",
-      "perfis bash/zsh",
-      "home .config (excluindo Codex)"
-    ]
+    "codex_credentials_used": false
   }
 }

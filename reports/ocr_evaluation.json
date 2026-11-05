@@ -1,0 +1,715 @@
+{
+  "report_version": 1,
+  "generated_at_utc": "2026-11-05T05:30:01.800365+00:00",
+  "python": "3.13.5",
+  "dataset": {
+    "size": 2,
+    "sha256": "de1898de994c957ebc38b3f4b71c037ca5a37cb4b2c6ed95dfc6d77cd87d3755",
+    "layouts": {
+      "cotera_escaneado": 2
+    },
+    "formats": {
+      ".pdf": 2
+    },
+    "tags": {
+      "ocr": 2,
+      "pt_BR": 2,
+      "BRL": 2,
+      "ruido": 1,
+      "rotacao": 1
+    }
+  },
+  "extraction": {
+    "mode": "ai",
+    "api": "OpenAI Responses",
+    "max_output_tokens": 3500,
+    "instructions_sha256": "97bcbf0e04da7782b96ecdd341a27b43d40683d881ae339d7464f68073be5742",
+    "schema_sha256": "db3007059c0c14d035e74ed43c70bf2326e249b3f174fab0c05d029dbe8a1890"
+  },
+  "llm": {
+    "status": "not_run",
+    "reason": "Execucao real nao solicitada (--baseline-only); nenhuma chamada externa.",
+    "runs": [],
+    "requested_models": []
+  },
+  "budget": {
+    "limit_usd": "3",
+    "accounted_upper_estimate_usd": "0",
+    "stopped": false,
+    "method": "Reserva por bytes UTF-8 + margem de framing e teto de saida; sem retries. Sem usage, mantem reserva e interrompe. Custos estimados com entrada integral, sem desconto de cache."
+  },
+  "pricing": null,
+  "baseline": {
+    "mode": "local",
+    "metrics": {
+      "documents": 2,
+      "attempted": 2,
+      "coverage": {
+        "correct": 2,
+        "total": 2,
+        "rate": 1.0
+      },
+      "accepted": {
+        "correct": 2,
+        "total": 2,
+        "rate": 1.0
+      },
+      "per_field_accuracy": {
+        "supplier": {
+          "correct": 2,
+          "total": 2,
+          "rate": 1.0,
+          "present": {
+            "correct": 2,
+            "total": 2,
+            "rate": 1.0
+          },
+          "missing": {
+            "correct": 0,
+            "total": 0,
+            "rate": null
+          }
+        },
+        "reference": {
+          "correct": 2,
+          "total": 2,
+          "rate": 1.0,
+          "present": {
+            "correct": 2,
+            "total": 2,
+            "rate": 1.0
+          },
+          "missing": {
+            "correct": 0,
+            "total": 0,
+            "rate": null
+          }
+        },
+        "currency": {
+          "correct": 2,
+          "total": 2,
+          "rate": 1.0,
+          "present": {
+            "correct": 2,
+            "total": 2,
+            "rate": 1.0
+          },
+          "missing": {
+            "correct": 0,
+            "total": 0,
+            "rate": null
+          }
+        },
+        "delivery_days": {
+          "correct": 2,
+          "total": 2,
+          "rate": 1.0,
+          "present": {
+            "correct": 2,
+            "total": 2,
+            "rate": 1.0
+          },
+          "missing": {
+            "correct": 0,
+            "total": 0,
+            "rate": null
+          }
+        },
+        "freight": {
+          "correct": 2,
+          "total": 2,
+          "rate": 1.0,
+          "present": {
+            "correct": 2,
+            "total": 2,
+            "rate": 1.0
+          },
+          "missing": {
+            "correct": 0,
+            "total": 0,
+            "rate": null
+          }
+        },
+        "discount": {
+          "correct": 2,
+          "total": 2,
+          "rate": 1.0,
+          "present": {
+            "correct": 2,
+            "total": 2,
+            "rate": 1.0
+          },
+          "missing": {
+            "correct": 0,
+            "total": 0,
+            "rate": null
+          }
+        },
+        "reported_total": {
+          "correct": 2,
+          "total": 2,
+          "rate": 1.0,
+          "present": {
+            "correct": 2,
+            "total": 2,
+            "rate": 1.0
+          },
+          "missing": {
+            "correct": 0,
+            "total": 0,
+            "rate": null
+          }
+        }
+      },
+      "field_accuracy_micro": {
+        "correct": 14,
+        "total": 14,
+        "rate": 1.0
+      },
+      "items": {
+        "counts": {
+          "expected": 6,
+          "predicted": 6,
+          "exact": 6,
+          "sku_matched": 6,
+          "quantity": 6,
+          "unit": 6,
+          "unit_price": 6
+        },
+        "precision": {
+          "correct": 6,
+          "total": 6,
+          "rate": 1.0
+        },
+        "recall": {
+          "correct": 6,
+          "total": 6,
+          "rate": 1.0
+        },
+        "sku_precision": {
+          "correct": 6,
+          "total": 6,
+          "rate": 1.0
+        },
+        "sku_recall": {
+          "correct": 6,
+          "total": 6,
+          "rate": 1.0
+        },
+        "quantity_exactness": {
+          "correct": 6,
+          "total": 6,
+          "rate": 1.0
+        },
+        "unit_exactness": {
+          "correct": 6,
+          "total": 6,
+          "rate": 1.0
+        },
+        "unit_price_exactness": {
+          "correct": 6,
+          "total": 6,
+          "rate": 1.0
+        }
+      },
+      "semantic_items": {
+        "counts": {
+          "expected": 6,
+          "predicted": 6,
+          "exact": 6,
+          "sku_matched": 6,
+          "quantity": 6,
+          "unit": 6,
+          "unit_price": 6
+        },
+        "precision": {
+          "correct": 6,
+          "total": 6,
+          "rate": 1.0
+        },
+        "recall": {
+          "correct": 6,
+          "total": 6,
+          "rate": 1.0
+        },
+        "sku_precision": {
+          "correct": 6,
+          "total": 6,
+          "rate": 1.0
+        },
+        "sku_recall": {
+          "correct": 6,
+          "total": 6,
+          "rate": 1.0
+        },
+        "quantity_exactness": {
+          "correct": 6,
+          "total": 6,
+          "rate": 1.0
+        },
+        "unit_exactness": {
+          "correct": 6,
+          "total": 6,
+          "rate": 1.0
+        },
+        "unit_price_exactness": {
+          "correct": 6,
+          "total": 6,
+          "rate": 1.0
+        }
+      },
+      "quote_exactness": {
+        "correct": 2,
+        "total": 2,
+        "rate": 1.0
+      },
+      "total_correctness": {
+        "correct": 2,
+        "total": 2,
+        "rate": 1.0
+      },
+      "total_state_accuracy": {
+        "correct": 2,
+        "total": 2,
+        "rate": 1.0
+      },
+      "eligibility_accuracy": {
+        "correct": 2,
+        "total": 2,
+        "rate": 1.0
+      },
+      "evidence_rejection": {
+        "correct": 0,
+        "total": 2,
+        "rate": 0.0
+      },
+      "schema_validation_failure": {
+        "correct": 0,
+        "total": 2,
+        "rate": 0.0
+      },
+      "failures_by_category": {},
+      "injection": {
+        "strict_resistance": {
+          "correct": 0,
+          "total": 0,
+          "rate": null
+        },
+        "rejected": 0,
+        "attack_value_observed": 0,
+        "unattempted": 0
+      },
+      "latency_ms": {
+        "n": 2,
+        "p50": 0.4435,
+        "p95": 0.652
+      },
+      "usage": {
+        "documents_with_usage": 2,
+        "complete": true,
+        "input_tokens": 0,
+        "output_tokens": 0,
+        "cached_input_tokens": 0
+      },
+      "cost": {
+        "documents_with_estimate": 2,
+        "complete": true,
+        "estimated_total_usd": "0",
+        "estimated_mean_usd_per_document": "0"
+      }
+    },
+    "documents": [
+      {
+        "id": "aurora_escaneada",
+        "document": "aurora_escaneada.pdf",
+        "sha256": "7261e8cd9ce2eff0497012186cca993d63f640f112301ba32fa2e76fecf5b9be",
+        "layout": "cotera_escaneado",
+        "tags": [
+          "ocr",
+          "pt_BR",
+          "BRL"
+        ],
+        "document_pages": [
+          {
+            "page": 1,
+            "method": "ocr",
+            "ocr_confidence": 95.08,
+            "start_line": 1,
+            "end_line": 13
+          }
+        ],
+        "status": "accepted",
+        "attempted": true,
+        "elapsed_ms": 0.652,
+        "usage": {
+          "input_tokens": 0,
+          "output_tokens": 0,
+          "cached_input_tokens": 0
+        },
+        "estimated_cost_usd": "0",
+        "response_model": null,
+        "draft": {
+          "supplier": "Aurora Suprimentos",
+          "reference": "AUR-2401",
+          "currency": "BRL",
+          "delivery_days": 5,
+          "freight": "45.00",
+          "discount": "0.00",
+          "reported_total": "1405.00",
+          "items": [
+            {
+              "sku": "PAP-A4",
+              "quantity": "20",
+              "unit": "un",
+              "unit_price": "32.00",
+              "source_line": 10
+            },
+            {
+              "sku": "CAN-AZ",
+              "quantity": "50",
+              "unit": "un",
+              "unit_price": "3.20",
+              "source_line": 11
+            },
+            {
+              "sku": "ORG-M",
+              "quantity": "10",
+              "unit": "un",
+              "unit_price": "56.00",
+              "source_line": 12
+            }
+          ],
+          "evidence": {
+            "supplier": 2,
+            "reference": 3,
+            "currency": 4,
+            "delivery_days": 5,
+            "freight": 6,
+            "discount": 7,
+            "reported_total": 8
+          }
+        },
+        "expected_audit": {
+          "eligible": true,
+          "issues": [],
+          "warnings": [
+            "Texto obtido por OCR: revisão humana dos valores no PDF original obrigatória antes da escolha."
+          ],
+          "requires_human_review": true,
+          "items": [
+            {
+              "sku": "PAP-A4",
+              "quantity": "20",
+              "unit": "un",
+              "unit_price": "32.00",
+              "line_total": "640.00",
+              "source_line": 10
+            },
+            {
+              "sku": "CAN-AZ",
+              "quantity": "50",
+              "unit": "un",
+              "unit_price": "3.20",
+              "line_total": "160.00",
+              "source_line": 11
+            },
+            {
+              "sku": "ORG-M",
+              "quantity": "10",
+              "unit": "un",
+              "unit_price": "56.00",
+              "line_total": "560.00",
+              "source_line": 12
+            }
+          ],
+          "subtotal": "1360.00",
+          "computed_total": "1405.00"
+        },
+        "observed_audit": {
+          "eligible": true,
+          "issues": [],
+          "warnings": [
+            "Texto obtido por OCR: revisão humana dos valores no PDF original obrigatória antes da escolha."
+          ],
+          "requires_human_review": true,
+          "items": [
+            {
+              "sku": "PAP-A4",
+              "quantity": "20",
+              "unit": "un",
+              "unit_price": "32.00",
+              "line_total": "640.00",
+              "source_line": 10
+            },
+            {
+              "sku": "CAN-AZ",
+              "quantity": "50",
+              "unit": "un",
+              "unit_price": "3.20",
+              "line_total": "160.00",
+              "source_line": 11
+            },
+            {
+              "sku": "ORG-M",
+              "quantity": "10",
+              "unit": "un",
+              "unit_price": "56.00",
+              "line_total": "560.00",
+              "source_line": 12
+            }
+          ],
+          "subtotal": "1360.00",
+          "computed_total": "1405.00"
+        },
+        "score": {
+          "fields": {
+            "supplier": true,
+            "reference": true,
+            "currency": true,
+            "delivery_days": true,
+            "freight": true,
+            "discount": true,
+            "reported_total": true
+          },
+          "expected_present": {
+            "supplier": true,
+            "reference": true,
+            "currency": true,
+            "delivery_days": true,
+            "freight": true,
+            "discount": true,
+            "reported_total": true
+          },
+          "items": {
+            "expected": 3,
+            "predicted": 3,
+            "exact": 3,
+            "sku_matched": 3,
+            "quantity": 3,
+            "unit": 3,
+            "unit_price": 3
+          },
+          "semantic_items": {
+            "expected": 3,
+            "predicted": 3,
+            "exact": 3,
+            "sku_matched": 3,
+            "quantity": 3,
+            "unit": 3,
+            "unit_price": 3
+          },
+          "quote_exact": true,
+          "total_computable": true,
+          "total_correct": true,
+          "eligibility_correct": true
+        },
+        "injection": null
+      },
+      {
+        "id": "prumo_ruido_rotacao",
+        "document": "prumo_ruido_rotacao.pdf",
+        "sha256": "c19e7258f9600ad624f89f77be41546c0a181644da287a746efc87c6494ad056",
+        "layout": "cotera_escaneado",
+        "tags": [
+          "ocr",
+          "pt_BR",
+          "BRL",
+          "ruido",
+          "rotacao"
+        ],
+        "document_pages": [
+          {
+            "page": 1,
+            "method": "ocr",
+            "ocr_confidence": 95.05,
+            "start_line": 1,
+            "end_line": 13
+          }
+        ],
+        "status": "accepted",
+        "attempted": true,
+        "elapsed_ms": 0.235,
+        "usage": {
+          "input_tokens": 0,
+          "output_tokens": 0,
+          "cached_input_tokens": 0
+        },
+        "estimated_cost_usd": "0",
+        "response_model": null,
+        "draft": {
+          "supplier": "Prumo Distribuidora",
+          "reference": "PRU-8810",
+          "currency": "BRL",
+          "delivery_days": 8,
+          "freight": "0.00",
+          "discount": "20.00",
+          "reported_total": "1320.00",
+          "items": [
+            {
+              "sku": "PAP-A4",
+              "quantity": "20",
+              "unit": "un",
+              "unit_price": "31.00",
+              "source_line": 10
+            },
+            {
+              "sku": "CAN-AZ",
+              "quantity": "50",
+              "unit": "un",
+              "unit_price": "2.80",
+              "source_line": 11
+            },
+            {
+              "sku": "ORG-M",
+              "quantity": "10",
+              "unit": "un",
+              "unit_price": "58.00",
+              "source_line": 12
+            }
+          ],
+          "evidence": {
+            "supplier": 2,
+            "reference": 3,
+            "currency": 4,
+            "delivery_days": 5,
+            "freight": 6,
+            "discount": 7,
+            "reported_total": 8
+          }
+        },
+        "expected_audit": {
+          "eligible": true,
+          "issues": [],
+          "warnings": [
+            "Texto obtido por OCR: revisão humana dos valores no PDF original obrigatória antes da escolha."
+          ],
+          "requires_human_review": true,
+          "items": [
+            {
+              "sku": "PAP-A4",
+              "quantity": "20",
+              "unit": "un",
+              "unit_price": "31.00",
+              "line_total": "620.00",
+              "source_line": 10
+            },
+            {
+              "sku": "CAN-AZ",
+              "quantity": "50",
+              "unit": "un",
+              "unit_price": "2.80",
+              "line_total": "140.00",
+              "source_line": 11
+            },
+            {
+              "sku": "ORG-M",
+              "quantity": "10",
+              "unit": "un",
+              "unit_price": "58.00",
+              "line_total": "580.00",
+              "source_line": 12
+            }
+          ],
+          "subtotal": "1340.00",
+          "computed_total": "1320.00"
+        },
+        "observed_audit": {
+          "eligible": true,
+          "issues": [],
+          "warnings": [
+            "Texto obtido por OCR: revisão humana dos valores no PDF original obrigatória antes da escolha."
+          ],
+          "requires_human_review": true,
+          "items": [
+            {
+              "sku": "PAP-A4",
+              "quantity": "20",
+              "unit": "un",
+              "unit_price": "31.00",
+              "line_total": "620.00",
+              "source_line": 10
+            },
+            {
+              "sku": "CAN-AZ",
+              "quantity": "50",
+              "unit": "un",
+              "unit_price": "2.80",
+              "line_total": "140.00",
+              "source_line": 11
+            },
+            {
+              "sku": "ORG-M",
+              "quantity": "10",
+              "unit": "un",
+              "unit_price": "58.00",
+              "line_total": "580.00",
+              "source_line": 12
+            }
+          ],
+          "subtotal": "1340.00",
+          "computed_total": "1320.00"
+        },
+        "score": {
+          "fields": {
+            "supplier": true,
+            "reference": true,
+            "currency": true,
+            "delivery_days": true,
+            "freight": true,
+            "discount": true,
+            "reported_total": true
+          },
+          "expected_present": {
+            "supplier": true,
+            "reference": true,
+            "currency": true,
+            "delivery_days": true,
+            "freight": true,
+            "discount": true,
+            "reported_total": true
+          },
+          "items": {
+            "expected": 3,
+            "predicted": 3,
+            "exact": 3,
+            "sku_matched": 3,
+            "quantity": 3,
+            "unit": 3,
+            "unit_price": 3
+          },
+          "semantic_items": {
+            "expected": 3,
+            "predicted": 3,
+            "exact": 3,
+            "sku_matched": 3,
+            "quantity": 3,
+            "unit": 3,
+            "unit_price": 3
+          },
+          "quote_exact": true,
+          "total_computable": true,
+          "total_correct": true,
+          "eligibility_correct": true
+        },
+        "injection": null
+      }
+    ]
+  },
+  "methodology": [
+    "Campos: igualdade exata (Decimal para numeros), sem normalizar nomes; nulos corretos contam apenas em extracoes aceitas. Falhas e casos sem orcamento erram todas as expectativas.",
+    "Itens: precisao/recall micro de multiconjunto (SKU, quantidade, unidade, preco); duplicatas pareadas uma vez. Metricas de SKU e exatidao de quantidade/preco sao separadas; denominador de exatidao e todos os itens esperados.",
+    "semantic_items usa os valores documentais completos inclusive nos casos multilinha; expected segue o contrato de uma linha. O relatorio mostra ambos.",
+    "Total correctness usa somente casos cujo gabarito permite calcular total; total_state_accuracy inclui os nulos. Nenhuma moeda e convertida. Elegibilidade e medida separadamente.",
+    "Taxas de rejeicao de evidencia e falha de schema/Pydantic usam chamadas tentadas; respostas incompletas e erros do provedor sao categorias separadas.",
+    "Injecao: resistencia estrita exige extracao aceita e todos os valores corretos; rejeicoes sao registradas separadamente. Valores-alvo sao inspecionados mesmo em respostas rejeitadas. Quatro ataques nao demonstram seguranca geral.",
+    "Latencia inclui chamada, validacao e evidencia (sem leitura do arquivo); p50 e mediana, p95 nearest-rank. Sem aquecimento, retries ou repeticoes; amostra pequena.",
+    "Tokens e custos sao observados por documento, inclusive quando a validacao falha. Usage ausente permanece null. Estimativas nao substituem a fatura. Baseline local nao usa tokens nem API.",
+    "Dataset sintetico de desenvolvimento, sem validacao externa ou estimativa de ganhos em producao. O verificador atual nao suporta en_US; esses casos permanecem no denominador.",
+    "Quando ha OCR, document_pages registra metodo e confianca media por pagina; expected_audit e observed_audit sinalizam revisao humana. A latencia de extracao nao inclui renderizacao/OCR, feitos durante a leitura do dataset. Confianca OCR nao e probabilidade de acerto dos valores."
+  ],
+  "credential_check": {
+    "environment_key_present": false,
+    "source": "OPENAI_API_KEY no ambiente; o CLI nao carrega arquivos de credenciais.",
+    "codex_credentials_used": false
+  }
+}
