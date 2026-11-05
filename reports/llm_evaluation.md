@@ -1,0 +1,41 @@
+# Avaliação da extração com IA
+
+Data UTC: 2026-11-05T05:07:10.031406+00:00. Dataset: 36 propostas fictícias.
+
+Estado da IA: **not_run**. Execucao real nao realizada: OPENAI_API_KEY ausente no ambiente. Configure uma chave de API propria e --model.
+
+| Extrator | Aceitas | Campos | Precisão itens | Recall itens | Qtd. exata | Preço exato | Total correto | Evidência rejeitada | Falha schema | Injeção resistente |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
+| Parser local | 5.6% (2/36) | 5.6% (14/252) | 100.0% (5/5) | 5.2% (5/97) | 5.2% (5/97) | 5.2% (5/97) | 7.4% (2/27) | 0.0% (0/36) | 0.0% (0/36) | 25.0% (1/4) |
+
+| Extrator | p50 (ms) | p95 (ms) | Tokens entrada/saída | Uso observado | Custo estimado total (US$) | Média/documento (US$) |
+|---|---:|---:|---:|---:|---:|---:|
+| Parser local | 0.01 | 0.276 | 0 / 0 | 36/36 | 0 | 0 |
+
+| Campo | Parser local |
+|---|---:|
+| supplier | 5.6% (2/36) |
+| reference | 5.6% (2/36) |
+| currency | 5.6% (2/36) |
+| delivery_days | 5.6% (2/36) |
+| freight | 5.6% (2/36) |
+| discount | 5.6% (2/36) |
+| reported_total | 5.6% (2/36) |
+
+| Extrator | Recall de valores documentais completos | Quantidade documental exata | Preço documental exato | Cobertura |
+|---|---:|---:|---:|---:|
+| Parser local | 5.2% (5/97) | 5.2% (5/97) | 5.2% (5/97) | 100.0% (36/36) |
+
+## Método e limites
+
+- Campos: igualdade exata (Decimal para numeros), sem normalizar nomes; nulos corretos contam apenas em extracoes aceitas. Falhas e casos sem orcamento erram todas as expectativas.
+- Itens: precisao/recall micro de multiconjunto (SKU, quantidade, unidade, preco); duplicatas pareadas uma vez. Metricas de SKU e exatidao de quantidade/preco sao separadas; denominador de exatidao e todos os itens esperados.
+- semantic_items usa os valores documentais completos inclusive nos casos multilinha; expected segue o contrato de uma linha. O relatorio mostra ambos.
+- Total correctness usa somente casos cujo gabarito permite calcular total; total_state_accuracy inclui os nulos. Nenhuma moeda e convertida. Elegibilidade e medida separadamente.
+- Taxas de rejeicao de evidencia e falha de schema/Pydantic usam chamadas tentadas; respostas incompletas e erros do provedor sao categorias separadas.
+- Injecao: resistencia estrita exige extracao aceita e todos os valores corretos; rejeicoes sao registradas separadamente. Valores-alvo sao inspecionados mesmo em respostas rejeitadas. Quatro ataques nao demonstram seguranca geral.
+- Latencia inclui chamada, validacao e evidencia (sem leitura do arquivo); p50 e mediana, p95 nearest-rank. Sem aquecimento, retries ou repeticoes; amostra pequena.
+- Tokens e custos sao observados por documento, inclusive quando a validacao falha. Usage ausente permanece null. Estimativas nao substituem a fatura. Baseline local nao usa tokens nem API.
+- Dataset sintetico de desenvolvimento, sem validacao externa ou estimativa de ganhos em producao. O verificador atual nao suporta en_US; esses casos permanecem no denominador.
+
+Os detalhes por documento, contagens, elegibilidade, rejeições de ataques e preços usados estão no JSON correspondente. Sem execução real, não há resultados de qualidade, latência, tokens ou custo de um modelo real.

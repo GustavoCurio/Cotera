@@ -30,7 +30,7 @@ flowchart LR
 - SQLite com fallback para diretório temporário e adaptador PostgreSQL; exportação em HTML, CSV e JSON.
 - API FastAPI, workflow n8n importável e CI com Python 3.12 e 3.14 e serviço PostgreSQL.
 
-A qualidade da extração com LLM ainda não foi medida com um modelo real. A avaliação reproduzível usa o parser local e casos sintéticos; os testes de IA usam um cliente simulado.
+A qualidade da extração com LLM ainda não foi medida com um modelo real: não havia chave de API nas fontes verificadas nesta execução. Há um dataset variado de 36 propostas fictícias, avaliador do caminho real de IA e baseline local; os testes de métricas usam cliente simulado. Os relatórios distinguem essas situações.
 
 ## Interface
 
@@ -167,7 +167,36 @@ O parser local é o padrão. A opção **Extração com IA** só aparece na inte
 
 A integração usa a Responses API com [Structured Outputs](https://developers.openai.com/api/docs/guides/structured-outputs), esquema estrito, `store=False`, tempo limite e validação posterior com Pydantic. Texto documental é tratado como dado não confiável. O modelo não recebe ferramentas de compra nem permissão para registrar decisões.
 
-O modo com IA admite outros layouts apenas quando consegue associar os valores a linhas de origem. Itens distribuídos em múltiplas linhas podem ficar incompletos e pendentes. A avaliação de referência abaixo mede o parser local e as regras; o contrato da integração com IA é testado com cliente simulado, sem medição de qualidade de um modelo real.
+O modo com IA admite outros layouts apenas quando consegue associar os valores a linhas de origem. Itens distribuídos em múltiplas linhas podem ficar incompletos e pendentes. O avaliador a seguir executa esse mesmo caminho de extração, com validação e regras; nesta entrega, somente a baseline local foi medida, pois não havia chave de API.
+
+### Avaliação da extração com IA
+
+O [dataset rotulado](evals/llm/manifest.json) contém **36 propostas fictícias**, em 12 famílias de layout: 32 TXTs e 4 PDFs textuais. Inclui tabelas reordenadas, CSV, Markdown, narrativa, fichas, tabulação, rótulos em inglês, itens e descrições em várias linhas, ausências, BRL/USD/EUR, formatos brasileiro e americano, cabeçalhos/rodapés ruidosos, duplicatas, totais divergentes e quatro tentativas de injeção. Cada caso tem uma cesta e um gabarito compatível com `QuoteDraft`, com linhas de evidência. A [política de anotação](evals/llm/README.md) explica as limitações do contrato e como regenerar os documentos.
+
+**Execução real de IA pendente.** A busca no ambiente, no `.env` do projeto, nos perfis de shell e em `~/.config` não encontrou `OPENAI_API_KEY`. Nenhuma chamada a modelo real foi feita e nenhum resultado simulado foi publicado como medição de qualidade. Não foram usadas credenciais de login do Codex. O [relatório JSON](reports/llm_evaluation.json) e o [resumo em Markdown](reports/llm_evaluation.md) registram esse estado e a baseline local efetivamente executada nos mesmos 36 documentos.
+
+Para reproduzir sem chave, inclusive na CI:
+
+```bash
+python -m evals.run_llm_eval --baseline-only
+python -m pytest tests/test_llm_eval.py -q
+```
+
+Para medir modelos reais, defina uma chave própria no ambiente e informe os modelos exatos disponíveis na sua conta. O comando aceita `--model` repetido e compartilha o orçamento entre todos os modelos:
+
+```bash
+export OPENAI_API_KEY="sua-chave-de-api"
+python -m evals.run_llm_eval \
+  --model gpt-4.1-mini-2025-04-14 \
+  --model gpt-4.1-2025-04-14 \
+  --budget-usd 3
+```
+
+Os nomes acima são exemplos com preços documentados, sem confirmação de acesso nesta conta. Confira disponibilidade e preços antes de executar. Para outro modelo, forneça `--pricing caminho/precos.json`, seguindo o formato de [pricing.json](evals/llm/pricing.json): `models` mapeia cada nome para `input` e `output`, em dólares por milhão de tokens, com data e fontes. Os preços de referência vêm das páginas oficiais de [GPT-4.1 mini](https://developers.openai.com/api/docs/models/gpt-4.1-mini) e [GPT-4.1](https://developers.openai.com/api/docs/models/gpt-4.1), consultadas em 05/11/2026. O avaliador recusa modelos sem preços e orçamentos acima de US$ 3. Antes de cada chamada, reserva um limite conservador pela entrada em bytes e pelo teto de saída; não faz novas tentativas automáticas. Sem dados de uso retornados, mantém a reserva e interrompe os envios. Os custos são estimativas com preço integral de entrada, sem desconto de cache; a fatura do provedor é a referência final.
+
+Os relatórios incluem acurácia por campo (valores presentes e ausentes separados), precisão/recall de itens com duplicatas, exatidão de quantidade/preço, total após `audit_quote` com `Decimal`, elegibilidade, rejeições de evidência, falhas de esquema/Pydantic, resistência aos ataques, latências p50/p95, tokens e custo estimado por documento. O uso de tokens segue os campos retornados pela [Responses API](https://developers.openai.com/api/reference/python/resources/responses/methods/create), inclusive quando a validação posterior falha. Falhas de extração contam como erros; rejeitar um ataque é registrado separadamente de extrair corretamente a proposta.
+
+O verificador atual só interpreta números brasileiros e cada item pode citar uma única linha. Os casos americanos continuam no denominador, mesmo quando rejeitados. Nos casos com valores separados em várias linhas, o gabarito do contrato usa campos nulos; métricas adicionais com os valores documentais completos mostram a informação perdida. O conjunto é sintético e pequeno, sem validação em fornecedores reais; quatro ataques não demonstram resistência geral a injeção. A demonstração Streamlit continua usando o parser local por padrão e não depende deste avaliador.
 
 ### API e automação
 
@@ -213,7 +242,7 @@ O `.env` é lido pelo Docker Compose. Na execução Python nativa, as variáveis
 .\.venv\Scripts\python.exe -m cotera evaluate
 ```
 
-Na validação desta alteração, em **Python 3.12.16 e 3.14.10: 47 testes passaram e 1 foi pulado em cada versão**. O teste de PostgreSQL foi pulado por não haver servidor disponível; ele é habilitado por `COTERA_TEST_POSTGRES_URL`. O [workflow de CI](.github/workflows/tests.yml) configura um serviço PostgreSQL e executa a suíte e a avaliação nas duas versões de Python. A execução de PostgreSQL e n8n/Compose não foi verificada nesta máquina, onde Docker não está instalado.
+Na validação desta alteração, em **Python 3.12.16 e 3.14.10: 74 testes passaram e 1 foi pulado em cada versão**. O teste de PostgreSQL foi pulado por não haver servidor disponível; ele é habilitado por `COTERA_TEST_POSTGRES_URL`. O [workflow de CI](.github/workflows/tests.yml) mantém as duas versões, configura um serviço PostgreSQL e executa a suíte, os testes de métricas com cliente simulado e as duas avaliações locais, sem exigir chave de IA. A execução de PostgreSQL e n8n/Compose não foi verificada nesta máquina.
 
 Os testes locais cobrem PDF/TXT, limites, números ambíguos, dados ausentes, evidências inválidas, arredondamento, deduplicação, transações, decisões concorrentes, exportação, API e os fluxos da interface. Também verificam a oferta de IA por chave em ambiente/segredos, o modo local inicial, o botão de exemplo, o fallback do SQLite e a ausência da chave nos dados persistidos/exportados.
 
@@ -252,6 +281,10 @@ O servidor também foi iniciado em Python 3.12 por pelo menos 15 segundos com `s
 | `cotera/api.py` | Integração HTTP |
 | `cotera/reports.py` | HTML, CSV e JSON |
 | `cotera/evaluation.py` | Casos de referência reproduzíveis |
+| `evals/llm/` | 36 propostas fictícias, gabaritos, gerador e preços de referência |
+| `evals/run_llm_eval.py` | Avaliação do caminho real de IA e baseline local, com orçamento |
+| `evals/metrics.py` / `evals/budget.py` | Métricas, uso de tokens e controle de custo |
+| `reports/llm_evaluation.json` / `.md` | Estado da execução e resultados observados |
 | `workflows/` | Automação n8n importável |
 
 Projeto demonstrativo desenvolvido com assistência de IA. Os exemplos são fictícios; não há implantação em empresa, compras executadas ou resultados de produção declarados.
