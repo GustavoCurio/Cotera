@@ -103,7 +103,13 @@ try:
         demo_url = (
             "sqlite:///" + str(Path(demo_home) / "demo.sqlite3") if demo_home else default_sqlite_url("demo.sqlite3")
         )
-        store = Store(demo_url)
+        try:
+            store = Store(demo_url)
+        except OSError:
+            if demo_home:
+                raise
+            # Hospedagem com storage aparente mas SQLite inutilizável: tenta o temporário.
+            store = Store("sqlite:///" + str(Path(__import__("tempfile").gettempdir()) / "cotera" / "demo.sqlite3"))
         with st.spinner("Carregando as propostas de demonstração…"):
             demo_identifier = seed_demo(store, scanned=st.session_state.get("cotera_demo_scanned", False))
         if "cotera_purchase" not in st.session_state:
@@ -113,8 +119,14 @@ try:
 except ValueError as error:
     st.error(str(error))
     st.stop()
-except Exception:
+except Exception as error:
+    import logging
+    import traceback
+
+    logging.exception("Falha ao abrir armazenamento ou carregar a demonstração")
     st.error("Não foi possível abrir o armazenamento. Confira a configuração do banco no servidor.")
+    st.caption(f"Detalhe técnico: {type(error).__name__}: {error}")
+    st.code(traceback.format_exc()[-2500:])
     st.stop()
 
 if st.session_state.get("cotera_flash"):

@@ -8,19 +8,16 @@ from collections.abc import Iterator, Sequence
 from contextlib import contextmanager
 from datetime import UTC, datetime
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, cast
+from typing import Any, cast
 from uuid import uuid4
 
 from .comparison import compare
 from .documents import Document, verify_evidence
 from .models import Decision, PurchaseRequest, QuoteDraft
 
-if TYPE_CHECKING:
-    import psycopg
-
-# Tipos avaliados sob demanda; a importação do driver continua restrita ao PostgreSQL.
-type DBConnection = sqlite3.Connection | psycopg.Connection[dict[str, Any]]
-type DBCursor = sqlite3.Cursor | psycopg.Cursor[dict[str, Any]]
+# Tipos largos: o driver PostgreSQL só é importado no ramo correspondente.
+type DBConnection = Any
+type DBCursor = Any
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -51,6 +48,9 @@ def default_sqlite_url(filename: str = "cotera.sqlite3") -> str:
         path = directory / filename
         with path.open("ab"):
             pass
+        # Confirma que o SQLite consegue abrir/travar o arquivo neste sistema de arquivos.
+        with sqlite3.connect(path, timeout=10) as connection:
+            connection.execute("SELECT 1")
         return "sqlite:///" + str(path)
 
     try:
