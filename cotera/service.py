@@ -18,9 +18,13 @@ def add_document(store, identifier, content, filename, mode="local", *, consent=
     document = read_document(content, filename)
     existing = next((p for p in snapshot["proposals"] if p["document"]["sha256"] == document.sha256), None)
     if existing:
-        return {"id": existing["id"], "created": False}
+        return {"id": existing["id"], "created": False, "extraction": existing["extraction"]}
     if len(snapshot["proposals"]) >= 10:
         raise ValueError("Limite de dez propostas por cotação atingido.")
     draft, metadata = extract(document, PurchaseRequest.model_validate(snapshot["request"]), mode,
                               consent=consent, client=client, model=model, api_key=api_key)
-    return store.add_proposal(identifier, document, draft, metadata)
+    result = store.add_proposal(identifier, document, draft, metadata)
+    if not result["created"]:
+        # Uma inclusão concorrente pode ter vencido; devolve a medição persistida.
+        metadata = next(p["extraction"] for p in store.get(identifier)["proposals"] if p["id"] == result["id"])
+    return {**result, "extraction": metadata}

@@ -91,6 +91,9 @@ try:
             st.session_state["cotera_purchase"] = demo_identifier
     else:
         store = Store()
+except ValueError as error:
+    st.error(str(error))
+    st.stop()
 except Exception:
     st.error("Não foi possível abrir o armazenamento. Confira a configuração do banco no servidor.")
     st.stop()
@@ -265,6 +268,16 @@ elif view == "Documentos":
             chosen = st.selectbox("Documento em conferência", [p["id"] for p in proposals], format_func=lambda i: next((p["draft"]["supplier"] or "Sem fornecedor") + " · " + p["document"]["filename"] for p in proposals if p["id"] == i))
             p = next(p for p in proposals if p["id"] == chosen)
             st.caption(f"Leitura {'com IA' if p['extraction']['mode'] == 'ai' else 'do modelo local'} · {p['extraction']['elapsed_ms']} ms · {p['document']['filename']}")
+            if p["extraction"]["mode"] == "ai":
+                meta = p["extraction"]
+                usage = meta.get("usage")
+                if usage:
+                    st.caption(f"Tokens: entrada {usage['input_tokens']} · saída {usage['output_tokens']} · entrada em cache {usage['cached_input_tokens']} · raciocínio {usage['reasoning_tokens']}. Cache e raciocínio já estão incluídos nos totais.")
+                if not meta.get("usage_complete"):
+                    st.caption("Uso de tokens incompleto ou indisponível; custo total desconhecido.")
+                cost = meta.get("estimated_cost_usd")
+                estimate = f"US$ {cost} (tabela de {meta.get('pricing_date') or 'data não informada'})" if cost is not None else "indisponível"
+                st.caption(f"Tentativas: {meta.get('attempts', 'não informado')} · correção usada: {'sim' if meta.get('repair_used') else 'não'} · custo estimado: {estimate}. A fatura do provedor é a referência final.")
             show_ocr_notice(p)
             labels = {"supplier": "Fornecedor", "reference": "Referência", "currency": "Moeda", "delivery_days": "Prazo · dias", "freight": "Frete", "discount": "Desconto", "reported_total": "Total declarado"}
             st.dataframe([{"Campo": label, "Valor extraído": str(p["draft"][field]) if p["draft"][field] is not None else "Não informado", "Linha": p["draft"]["evidence"][field]} for field, label in labels.items()], hide_index=True, width="stretch")

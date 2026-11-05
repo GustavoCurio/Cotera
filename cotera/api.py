@@ -75,7 +75,7 @@ async def add_proposal(identifier: str, file: UploadFile = File(...), mode: Lite
     except PermissionError as error:
         raise HTTPException(403, str(error)) from error
     except ProviderError as error:
-        raise HTTPException(502, str(error)) from error
+        raise HTTPException(502, {"code": error.code, "message": str(error), "extraction": error.metadata}) from error
     except (ValueError, ValidationError) as error:
         raise HTTPException(422, "Documento ou valores inválidos. Confira o modelo e os limites de entrada.") from error
     finally:

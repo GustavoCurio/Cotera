@@ -190,12 +190,13 @@ def test_transaction_rollback_and_sql_is_data(store):
 
 
 class FakeResponses:
-    def __init__(self, payload, status="completed"):
+    def __init__(self, payload, status="completed", usage=None):
         self.payload, self.status, self.calls = payload, status, []
+        self.usage = usage
 
     def create(self, **kwargs):
         self.calls.append(kwargs)
-        return SimpleNamespace(output_text=json.dumps(self.payload), status=self.status)
+        return SimpleNamespace(output_text=json.dumps(self.payload), status=self.status, usage=self.usage)
 
 
 def test_ai_requires_consent_and_checks_schema_and_evidence(document):
@@ -432,6 +433,59 @@ def test_ai_receives_server_credentials_without_saving_key(store, document, monk
     snapshot = store.get(identifier)
     assert snapshot["eligible_count"] == 1
     assert "chave-ficticia-para-teste" not in snapshot_json(snapshot).decode()
+
+
+def test_ai_metrics_in_api_persistence_and_streamlit(store, document, tmp_path, monkeypatch):
+    responses = FakeResponses(extract_template(document).model_dump(mode="json"), usage=SimpleNamespace(
+        input_tokens=100, output_tokens=50,
+        input_tokens_details=SimpleNamespace(cached_tokens=20),
+        output_tokens_details=SimpleNamespace(reasoning_tokens=10)))
+    monkeypatch.setattr("openai.OpenAI", lambda **kwargs: SimpleNamespace(responses=responses))
+    monkeypatch.setenv("OPENAI_API_KEY", "chave-ficticia")
+    monkeypatch.setenv("OPENAI_MODEL", "gpt-4.1-mini")
+    monkeypatch.setattr(api, "store", lambda: store)
+    identifier = store.create(demo_request())["id"]
+    with TestClient(api.app) as client:
+        route = f"/requests/{identifier}/proposals"
+        kwargs = {"files": {"file": ("aurora.txt", (DATA / "proposals/aurora.txt").read_bytes())},
+                  "data": {"mode": "ai", "approve_external_processing": "true"}}
+        first = client.post(route, **kwargs)
+        second = client.post(route, **kwargs)
+        assert first.status_code == second.status_code == 200
+        assert first.json()["created"] and not second.json()["created"]
+        meta = first.json()["extraction"]
+        assert meta == second.json()["extraction"] == store.get(identifier)["proposals"][0]["extraction"]
+        assert meta["attempts"] == 1 and meta["usage"]["reasoning_tokens"] == 10
+        assert meta["estimated_cost_usd"] == "0.00012" and meta["pricing_date"]
+        assert len(responses.calls) == 1
+    monkeypatch.setenv("COTERA_DEMO_HOME", str(tmp_path / "demo"))
+    monkeypatch.setenv("COTERA_DATABASE_URL", store.url)
+    monkeypatch.delenv("OPENAI_API_KEY")
+    ui = AppTest.from_file(str(ROOT / "app.py"), default_timeout=60).run()
+    ui.selectbox(key="cotera_space").set_value("Minhas cotações").run()
+    ui.segmented_control[0].set_value("Documentos").run()
+    assert not ui.exception
+    assert any("raciocínio 10" in c.value and "cache 20" in c.value for c in ui.caption)
+    assert any("custo estimado: US$ 0.00012" in c.value and "Tentativas: 1" in c.value for c in ui.caption)
+
+
+def test_api_provider_error_is_typed_safe_and_keeps_usage(store, document, monkeypatch):
+    responses = FakeResponses({**extract_template(document).model_dump(mode="json"), "freight": "999"},
+                              usage=SimpleNamespace(input_tokens=100, output_tokens=50))
+    monkeypatch.setattr("openai.OpenAI", lambda **kwargs: SimpleNamespace(responses=responses))
+    monkeypatch.setenv("OPENAI_API_KEY", "chave-ficticia-secreta")
+    monkeypatch.setenv("OPENAI_MODEL", "gpt-4.1-mini")
+    monkeypatch.setattr(api, "store", lambda: store)
+    identifier = store.create(demo_request())["id"]
+    with TestClient(api.app) as client:
+        result = client.post(f"/requests/{identifier}/proposals",
+                             files={"file": ("aurora.txt", (DATA / "proposals/aurora.txt").read_bytes())},
+                             data={"mode": "ai", "approve_external_processing": "true"})
+    assert result.status_code == 502
+    detail = result.json()["detail"]
+    assert detail["code"] == "extraction_evidence" and "evidência válida" in detail["message"]
+    assert detail["extraction"]["usage"]["input_tokens"] == 200
+    assert "secreta" not in result.text and store.get(identifier)["proposals"] == []
 
 
 @pytest.mark.parametrize("failure", ["directory", "journal", "database"])
