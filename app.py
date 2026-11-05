@@ -1,9 +1,19 @@
 """Mesa de compras Cotera: cesta, propostas lado a lado e decisão documentada."""
 
+from __future__ import annotations
+
 import os
+import sys
 from decimal import Decimal
 from html import escape
 from pathlib import Path
+
+# Community Cloud pode reutilizar site-packages com uma cópia antiga de cotera/.
+_REPO_ROOT = Path(__file__).resolve().parent
+if sys.path[:1] != [str(_REPO_ROOT)]:
+    sys.path.insert(0, str(_REPO_ROOT))
+for _name in [name for name in list(sys.modules) if name == "cotera" or name.startswith("cotera.")]:
+    del sys.modules[_name]
 
 import streamlit as st
 from pydantic import ValidationError
@@ -109,9 +119,16 @@ try:
             if demo_home:
                 raise
             # Hospedagem com storage aparente mas SQLite inutilizável: tenta o temporário.
-            store = Store("sqlite:///" + str(Path(__import__("tempfile").gettempdir()) / "cotera" / "demo.sqlite3"))
+            import tempfile
+
+            store = Store("sqlite:///" + str(Path(tempfile.gettempdir()) / "cotera" / "demo.sqlite3"))
+        scanned = bool(st.session_state.get("cotera_demo_scanned", False))
         with st.spinner("Carregando as propostas de demonstração…"):
-            demo_identifier = seed_demo(store, scanned=st.session_state.get("cotera_demo_scanned", False))
+            try:
+                demo_identifier = seed_demo(store, scanned=scanned)
+            except TypeError:
+                # Cópia antiga em cache sem o parâmetro scanned (redeploy/reboot resolve).
+                demo_identifier = seed_demo(store)
         if "cotera_purchase" not in st.session_state:
             st.session_state["cotera_purchase"] = demo_identifier
     else:
@@ -121,12 +138,10 @@ except ValueError as error:
     st.stop()
 except Exception as error:
     import logging
-    import traceback
 
     logging.exception("Falha ao abrir armazenamento ou carregar a demonstração")
     st.error("Não foi possível abrir o armazenamento. Confira a configuração do banco no servidor.")
     st.caption(f"Detalhe técnico: {type(error).__name__}: {error}")
-    st.code(traceback.format_exc()[-2500:])
     st.stop()
 
 if st.session_state.get("cotera_flash"):

@@ -10,3 +10,4 @@ pillow==13.0.0
 python-multipart==0.0.32
 openai==2.54.0
 psycopg[binary]==3.3.6
+# invalidate-cloud-cache: seed_demo-scanned-2026-11-05

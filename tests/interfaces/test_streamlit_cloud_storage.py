@@ -6,7 +6,9 @@ import pytest
 from streamlit.testing.v1 import AppTest
 
 import cotera.store as store_module
-from cotera.demo import DATA
+import inspect
+
+from cotera.demo import DATA, seed_demo
 
 ROOT = DATA.parent
 
@@ -37,3 +39,4 @@ def test_streamlit_demo_without_database_url_uses_temp_storage(tmp_path, monkeyp
     assert any("MENOR CUSTO ELEGÍVEL" in m.value for m in ui.markdown)
     assert any("R$ 1.320,00" in m.value for m in ui.markdown)
     assert os.environ.get("COTERA_DATABASE_URL") is None
+    assert "scanned" in inspect.signature(seed_demo).parameters

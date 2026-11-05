@@ -55,6 +55,7 @@ ignore = [
 
 [tool.ruff.lint.per-file-ignores]
 "cotera/api.py" = ["B008"]  # FastAPI declara parâmetros por Header, File e Form.
+"app.py" = ["E402"]  # sys.path do repositório precisa preceder imports de cotera.
 
 [tool.mypy]
 files = ["cotera"]

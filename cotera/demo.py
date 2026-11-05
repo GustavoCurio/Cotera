@@ -27,7 +27,10 @@ def demo_request() -> PurchaseRequest:
 
 
 def seed_demo(store: Store, *, scanned: bool = False) -> str:
-    """Cria a demonstração uma vez; reenvios dos PDFs são deduplicados pelo hash."""
+    """Cria a demonstração uma vez; reenvios dos PDFs são deduplicados pelo hash.
+
+    Parâmetro scanned seleciona o PDF só-imagem da Aurora quando True.
+    """
     request = demo_request()
     if scanned:
         request.title = DEMO_TITLE + " escaneada"
