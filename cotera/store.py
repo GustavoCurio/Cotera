@@ -5,6 +5,7 @@ import json
 import os
 from pathlib import Path
 import sqlite3
+import tempfile
 from uuid import uuid4
 from .comparison import compare
 from .documents import Document, verify_evidence
@@ -27,12 +28,30 @@ def now():
     return datetime.now(timezone.utc).isoformat()
 
 
+def default_sqlite_url(filename="cotera.sqlite3"):
+    """Usa storage quando gravável; em hospedagem efêmera, recorre ao diretório temporário."""
+    def prepare(directory):
+        directory.mkdir(parents=True, exist_ok=True)
+        # SQLite também precisa criar arquivos de journal ao lado do banco.
+        with tempfile.TemporaryFile(dir=directory):
+            pass
+        path = directory / filename
+        with path.open("ab"):
+            pass
+        return "sqlite:///" + str(path)
+
+    try:
+        return prepare(ROOT / "storage")
+    except OSError:
+        return prepare(Path(tempfile.gettempdir()) / "cotera")
+
+
 class Store:
     """Abre conexões por operação; todos os valores entram no SQL por parâmetros."""
 
     def __init__(self, url=None):
         """Aceita sqlite:///caminho ou postgresql://; padrão é storage/cotera.sqlite3."""
-        self.url = url or os.environ.get("COTERA_DATABASE_URL") or "sqlite:///" + str(ROOT / "storage" / "cotera.sqlite3")
+        self.url = url or os.environ.get("COTERA_DATABASE_URL") or default_sqlite_url()
         self.postgres = self.url.startswith(("postgresql://", "postgres://"))
         if not self.postgres and not self.url.startswith("sqlite:///"):
             raise ValueError("COTERA_DATABASE_URL precisa usar sqlite:/// ou postgresql://.")

@@ -1,0 +1,19 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "cotera"
+version = "1.0.0"
+description = "Comparação de propostas comerciais com evidências e decisão humana"
+requires-python = ">=3.12"
+dynamic = ["dependencies"]
+
+[tool.setuptools]
+packages = ["cotera"]
+
+[tool.setuptools.dynamic]
+dependencies = {file = ["requirements.txt"]}
+
+[dependency-groups]
+dev = ["pytest==9.2.0", "httpx==0.28.1", "reportlab==4.5.1"]

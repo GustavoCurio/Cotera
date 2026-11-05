@@ -10,3 +10,5 @@ SKU | Quantidade | Unidade | Preço unitário
 PAP-A4 | 20 | un | R$ 31,00
 CAN-AZ | 50 | un | R$ 2,80
 ORG-M | 10 | un | R$ 58,00
+
+Fornecedor, referência e condições fictícios, criados para demonstração.

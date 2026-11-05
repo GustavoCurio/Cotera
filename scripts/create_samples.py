@@ -25,7 +25,7 @@ def create():
                  f"CAN-AZ | 50 | un | R$ {prices[1]}", f"ORG-M | 10 | un | R$ {prices[2]}"]
         text = "\n".join(lines)
         texts[slug] = text
-        (target / f"{slug}.txt").write_text(text, encoding="utf-8")
+        (target / f"{slug}.txt").write_text(text + "\n\nFornecedor, referência e condições fictícios, criados para demonstração.\n", encoding="utf-8")
         pdf = canvas.Canvas(str(target / f"{slug}.pdf"), pagesize=A4, invariant=1)
         pdf.setTitle(f"{supplier} · proposta fictícia")
         pdf.setFillColor(colors.HexColor("#174d42"))

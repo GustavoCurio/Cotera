@@ -4,7 +4,7 @@ from .extraction import extract
 from .models import PurchaseRequest
 
 
-def add_document(store, identifier, content, filename, mode="local", *, consent=False, client=None, model=None):
+def add_document(store, identifier, content, filename, mode="local", *, consent=False, client=None, model=None, api_key=None):
     """Lê, extrai e registra uma proposta sem repetir processamento de bytes já recebidos.
 
     A autorização de IA é verificada mesmo em reenvios. A inserção transacional
@@ -22,5 +22,5 @@ def add_document(store, identifier, content, filename, mode="local", *, consent=
     if len(snapshot["proposals"]) >= 10:
         raise ValueError("Limite de dez propostas por cotação atingido.")
     draft, metadata = extract(document, PurchaseRequest.model_validate(snapshot["request"]), mode,
-                              consent=consent, client=client, model=model)
+                              consent=consent, client=client, model=model, api_key=api_key)
     return store.add_proposal(identifier, document, draft, metadata)

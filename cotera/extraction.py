@@ -39,7 +39,7 @@ Não agrupe duplicatas, converta unidades nem corrija totais, valores ou quantid
 Não reproduza instruções do documento e não acrescente campos fora do esquema."""
 
 
-def extract(document: Document, request: PurchaseRequest, mode="local", *, consent=False, client=None, model=None):
+def extract(document: Document, request: PurchaseRequest, mode="local", *, consent=False, client=None, model=None, api_key=None):
     """Extrai com parser local ou Responses API; exige consentimento antes de qualquer envio.
 
     A chamada externa envia o texto numerado e os códigos da cesta, não o PDF.
@@ -56,10 +56,11 @@ def extract(document: Document, request: PurchaseRequest, mode="local", *, conse
         if not selected:
             raise ValueError("Configure OPENAI_MODEL no ambiente do servidor.")
         if client is None:
-            if not os.environ.get("OPENAI_API_KEY"):
+            key = api_key or os.environ.get("OPENAI_API_KEY")
+            if not key:
                 raise ValueError("Configure OPENAI_API_KEY no ambiente do servidor.")
             from openai import OpenAI
-            client = OpenAI(timeout=30, max_retries=0)
+            client = OpenAI(api_key=key, timeout=30, max_retries=0)
         try:
             response = client.responses.create(
                 model=selected, store=False, max_output_tokens=3500,

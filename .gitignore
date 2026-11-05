@@ -9,3 +9,6 @@ __pycache__/
 .streamlit/secrets.toml
 storage/
 *.log
+*.egg-info/
+# Streamlit Cloud deve instalar as dependências de requirements.txt.
+uv.lock

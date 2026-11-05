@@ -4,13 +4,14 @@ from html import escape
 import os
 from pathlib import Path
 import streamlit as st
+from streamlit.errors import StreamlitSecretNotFoundError
 from pydantic import ValidationError
 from cotera.demo import DATA, seed_demo
 from cotera.documents import read_document
 from cotera.extraction import ProviderError, extract
 from cotera.models import Decision, PurchaseRequest
 from cotera.reports import brl, comparison_csv, report_html, snapshot_json
-from cotera.store import ConflictError, ROOT, Store
+from cotera.store import ConflictError, Store, default_sqlite_url
 from cotera.service import add_document
 
 st.set_page_config(page_title="Cotera · Mesa de compras", page_icon="◒", layout="wide")
@@ -35,16 +36,35 @@ def set_view(view):
     st.session_state["cotera_view"] = view
 
 
-head, controls, action = st.columns([2.5, 1.3, 1])
+def load_example():
+    """Abre a cesta e as três propostas fictícias no banco de demonstração."""
+    change_space()
+    st.session_state["cotera_space"] = "Demonstração"
+    st.session_state["cotera_view"] = "Comparar"
+
+
+def server_setting(name):
+    """Lê a configuração do ambiente ou dos segredos opcionais do Streamlit."""
+    if value := os.environ.get(name):
+        return value
+    try:
+        return st.secrets.get(name, "")
+    except (FileNotFoundError, StreamlitSecretNotFoundError):
+        return ""
+
+
+head, controls, example, action = st.columns([2.5, 1.3, 1, 1])
 head.markdown('<div class="brand"><b>◒</b>Cotera<small>MESA DE COMPRAS</small></div>', unsafe_allow_html=True)
-space = controls.selectbox("Espaço", ["Demonstração", "Minhas cotações"], label_visibility="collapsed", on_change=change_space)
+space = controls.selectbox("Espaço", ["Demonstração", "Minhas cotações"], key="cotera_space", label_visibility="collapsed", on_change=change_space)
+example.button("Carregar exemplo", on_click=load_example, width="stretch")
 if action.button("＋ Nova cotação", disabled=space == "Demonstração", width="stretch"):
     st.session_state["cotera_new"] = True
 st.divider()
 try:
     if space == "Demonstração":
-        demo_home = Path(os.environ.get("COTERA_DEMO_HOME", str(ROOT / "storage")))
-        store = Store("sqlite:///" + str(demo_home / "demo.sqlite3"))
+        demo_home = os.environ.get("COTERA_DEMO_HOME")
+        demo_url = "sqlite:///" + str(Path(demo_home) / "demo.sqlite3") if demo_home else default_sqlite_url("demo.sqlite3")
+        store = Store(demo_url)
         seed_demo(store)
     else:
         store = Store()
@@ -177,20 +197,27 @@ elif view == "Documentos":
     upload, evidence = st.columns([1, 1.5], gap="large")
     with upload:
         st.markdown("#### Adicionar proposta")
-        mode_label = st.radio("Leitura do documento", ["Modelo Cotera · local", "Extração com IA"], captions=["Lê os campos do modelo fornecido, sem LLM.", "Extrai de outros layouts com texto selecionável."])
+        api_key = server_setting("OPENAI_API_KEY")
+        modes = ["Modelo Cotera · local"]
+        captions = ["Lê os campos do modelo fornecido, sem LLM."]
+        if api_key:
+            modes.append("Extração com IA")
+            captions.append("Extrai de outros layouts com texto selecionável.")
+        mode_label = st.radio("Leitura do documento", modes, index=0, captions=captions)
         mode = "ai" if mode_label == "Extração com IA" else "local"
         consent = False
-        configured = bool(os.environ.get("OPENAI_API_KEY") and os.environ.get("OPENAI_MODEL"))
+        model = None
         if mode == "ai":
+            model = st.text_input("Modelo da OpenAI", value=server_setting("OPENAI_MODEL"), help="Informe um modelo compatível com saída estruturada.").strip()
             st.caption("O texto do documento e os códigos da cesta serão enviados à OpenAI. A chamada pode consumir créditos da API.")
             consent = st.checkbox("Autorizo o envio do texto para extração com IA")
-            if not configured:
-                st.info("A extração com IA fica disponível quando OPENAI_API_KEY e OPENAI_MODEL estão configurados no servidor.")
+            if not model:
+                st.info("Informe o modelo ou configure OPENAI_MODEL nos segredos ou no ambiente do servidor.")
         file = st.file_uploader("Proposta do fornecedor", type=["pdf", "txt"], help="Até 2 MB, cinco páginas e 25 mil caracteres. PDF precisa ter texto selecionável.")
-        if st.button("Extrair e adicionar", type="primary", disabled=file is None or (mode == "ai" and (not configured or not consent))):
+        if st.button("Extrair e adicionar", type="primary", disabled=file is None or (mode == "ai" and (not api_key or not model or not consent))):
             try:
                 with st.spinner("Lendo e conferindo a proposta…"):
-                    result = add_document(store, identifier, file.getvalue(), file.name, mode, consent=consent)
+                    result = add_document(store, identifier, file.getvalue(), file.name, mode, consent=consent, model=model, api_key=api_key)
                 st.session_state["cotera_flash"] = "Proposta adicionada. Confira os dados e as linhas de origem." if result["created"] else "Este arquivo já está nesta cotação; a proposta foi preservada."
                 st.rerun()
             except ValidationError:

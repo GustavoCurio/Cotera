@@ -13,6 +13,7 @@ from pydantic import ValidationError
 from pypdf import PdfWriter
 from streamlit.testing.v1 import AppTest
 from cotera import api
+from cotera import store as store_module
 from cotera.comparison import audit_quote, compare
 from cotera.demo import DATA, demo_request, seed_demo
 from cotera.documents import MAX_BYTES, br_number, extract_template, read_document, verify_evidence
@@ -285,11 +286,19 @@ def test_streamlit_comparison_decision_documents_and_history(tmp_path, monkeypat
     ui.segmented_control[0].set_value("Documentos").run()
     assert not ui.exception
     assert len(ui.dataframe) == 1
-    next(r for r in ui.radio if r.label == "Leitura do documento").set_value("Extração com IA").run()
+    reader = next(r for r in ui.radio if r.label == "Leitura do documento")
+    assert reader.options == ["Modelo Cotera · local"]
+    assert reader.value == "Modelo Cotera · local"
     assert next(b for b in ui.button if b.label == "Extrair e adicionar").disabled
     next(s for s in ui.selectbox if s.label == "Espaço").set_value("Minhas cotações").run()
     assert not ui.exception
     assert any("primeira cotação" in item.value for item in ui.info)
+    next(b for b in ui.button if b.label == "Carregar exemplo").click().run()
+    assert not ui.exception
+    assert ui.selectbox(key="cotera_space").value == "Demonstração"
+    assert ui.segmented_control[0].value == "Comparar"
+    assert any("Prumo Distribuidora" in m.value for m in ui.markdown)
+    assert Store(os.environ["COTERA_DATABASE_URL"]).list() == []
 
 
 def test_concurrent_decisions_only_one_wins(store):
@@ -334,6 +343,111 @@ def test_streamlit_create_own_request(tmp_path, monkeypatch):
     assert ui.segmented_control[0].value == "Documentos"
     own = Store("sqlite:///" + str(tmp_path / "own.sqlite3")).list()
     assert len(own) == 1 and own[0]["items"][0]["sku"] == "TESTE-01"
+
+
+@pytest.mark.parametrize("source", ["env", "secrets"])
+@pytest.mark.parametrize("configured_model", [False, True])
+def test_streamlit_ai_requires_key_and_defaults_to_local(tmp_path, monkeypatch, source, configured_model):
+    monkeypatch.setenv("COTERA_DEMO_HOME", str(tmp_path / "demo"))
+    settings = {"OPENAI_API_KEY": "chave-ficticia-para-teste"}
+    if configured_model:
+        settings["OPENAI_MODEL"] = "modelo-simulado"
+    ui = AppTest.from_file(str(ROOT / "app.py"), default_timeout=60)
+    if source == "env":
+        for name, value in settings.items():
+            monkeypatch.setenv(name, value)
+    else:
+        ui.secrets.update(settings)
+    ui.run()
+    ui.segmented_control[0].set_value("Documentos").run()
+    assert not ui.exception
+    reader = next(r for r in ui.radio if r.label == "Leitura do documento")
+    assert reader.options == ["Modelo Cotera · local", "Extração com IA"]
+    assert reader.value == "Modelo Cotera · local"
+    reader.set_value("Extração com IA").run()
+    assert not ui.exception
+    model = next(t for t in ui.text_input if t.label == "Modelo da OpenAI")
+    assert model.value == settings.get("OPENAI_MODEL", "")
+    assert not ui.checkbox[0].value
+    assert next(b for b in ui.button if b.label == "Extrair e adicionar").disabled
+
+
+def test_streamlit_model_without_key_does_not_offer_ai(tmp_path, monkeypatch):
+    monkeypatch.setenv("COTERA_DEMO_HOME", str(tmp_path / "demo"))
+    monkeypatch.setenv("OPENAI_MODEL", "modelo-simulado")
+    ui = AppTest.from_file(str(ROOT / "app.py"), default_timeout=60).run()
+    ui.segmented_control[0].set_value("Documentos").run()
+    assert not ui.exception
+    assert ui.radio[0].options == ["Modelo Cotera · local"]
+
+
+def test_ai_receives_server_credentials_without_saving_key(store, document, monkeypatch):
+    responses = FakeResponses(extract_template(document).model_dump(mode="json"))
+    options = {}
+
+    def fake_openai(**kwargs):
+        options.update(kwargs)
+        return SimpleNamespace(responses=responses)
+
+    monkeypatch.setattr("openai.OpenAI", fake_openai)
+    identifier = store.create(demo_request())["id"]
+    add_document(store, identifier, (DATA / "proposals/aurora.txt").read_bytes(), "aurora.txt", "ai",
+                 consent=True, model="modelo-simulado", api_key="chave-ficticia-para-teste")
+    assert options == {"api_key": "chave-ficticia-para-teste", "timeout": 30, "max_retries": 0}
+    assert responses.calls[0]["model"] == "modelo-simulado"
+    snapshot = store.get(identifier)
+    assert snapshot["eligible_count"] == 1
+    assert "chave-ficticia-para-teste" not in snapshot_json(snapshot).decode()
+
+
+@pytest.mark.parametrize("failure", ["directory", "journal", "database"])
+def test_default_sqlite_falls_back_to_writable_tempdir(tmp_path, monkeypatch, failure):
+    root = tmp_path / "project"
+    root.mkdir()
+    storage = root / "storage"
+    monkeypatch.setattr(store_module, "ROOT", root)
+    monkeypatch.setattr(store_module.tempfile, "gettempdir", lambda: str(tmp_path / "temp"))
+    monkeypatch.delenv("COTERA_DATABASE_URL", raising=False)
+    if failure == "directory":
+        storage.write_text("Impede a criação do diretório padrão.")
+    elif failure == "journal":
+        original_temporary_file = store_module.tempfile.TemporaryFile
+
+        def temporary_file(*args, **kwargs):
+            if kwargs.get("dir") == storage:
+                raise PermissionError("Diretório padrão somente para leitura.")
+            return original_temporary_file(*args, **kwargs)
+
+        monkeypatch.setattr(store_module.tempfile, "TemporaryFile", temporary_file)
+    else:
+        original_open = Path.open
+
+        def open_path(path, *args, **kwargs):
+            if path.parent == storage:
+                raise PermissionError("Banco padrão somente para leitura.")
+            return original_open(path, *args, **kwargs)
+
+        monkeypatch.setattr(Path, "open", open_path)
+
+    own = Store()
+    assert own.path == tmp_path / "temp" / "cotera" / "cotera.sqlite3"
+    identifier = own.create(demo_request())["id"]
+    assert Store().get(identifier)["request"]["title"] == demo_request().title
+    demo = Store(store_module.default_sqlite_url("demo.sqlite3"))
+    assert demo.path != own.path
+    assert demo.list() == []
+    assert len(demo.get(seed_demo(demo))["proposals"]) == 3
+
+
+def test_explicit_sqlite_configuration_does_not_silently_fall_back(tmp_path, monkeypatch):
+    blocked = tmp_path / "not-a-directory"
+    blocked.write_text("Configuração explícita inválida.")
+    url = "sqlite:///" + str(blocked / "database.sqlite3")
+    with pytest.raises(OSError):
+        Store(url)
+    monkeypatch.setenv("COTERA_DATABASE_URL", url)
+    with pytest.raises(OSError):
+        Store()
 
 
 @pytest.mark.skipif(not os.environ.get("COTERA_TEST_POSTGRES_URL"), reason="Requer PostgreSQL; executado no job de integração do CI.")
