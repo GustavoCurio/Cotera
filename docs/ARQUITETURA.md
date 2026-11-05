@@ -69,9 +69,15 @@ HTML escapa textos dos documentos. CSV neutraliza prefixos de fórmula. JSON pre
 
 ## Validação
 
-- Testes locais: parser, limites, contratos, evidências, cálculos, armazenamento SQLite, concorrência, API e interface.
-- PostgreSQL: teste de integração parametrizado e serviço configurado no CI; não executado na validação local sem servidor.
+- Testes por domínio: `tests/documents/`, `tests/comparison/`, `tests/persistence/`, `tests/extraction/`, `tests/interfaces/`, `tests/ocr/` e `tests/evaluation/`. A migração preservou os 139 casos coletados, incluindo parametrizações.
+- Fixtures em `tests/conftest.py`: documento de referência, SQLite temporário, isolamento de credenciais, bloqueio de clientes/envios reais à OpenAI e verificação dos pré-requisitos de PostgreSQL/OCR. Clientes simulados compartilhados ficam em `tests/fakes.py`.
+- Marcadores registrados: `postgres` para o banco de integração, `ocr` para Tesseract real e `slow` para OCR, geração de documentos e fluxos da interface.
+- PostgreSQL: teste de integração e serviço configurado no CI; não executado na validação local sem servidor.
 - IA: contrato testado com cliente simulado; sem avaliação real de modelo externo.
 - n8n: workflow JSON fornecido e conferido estruturalmente; execução depende da instância n8n.
+
+O `pyproject.toml` concentra pytest, Ruff, mypy e cobertura. O Ruff aplica as famílias E/F/I/B/UP/SIM/RUF, alvo Python 3.12 e largura de 120 caracteres; strings documentais longas e caracteres do português são preservados. O mypy verifica os 15 módulos de `cotera/`, com `disallow_untyped_defs`, `check_untyped_defs`, opcionais explícitos e avisos de supressões desnecessárias. Somente as bibliotecas OCR sem stubs têm `ignore_missing_imports`. Dados JSON heterogêneos e respostas dinâmicas do SDK usam `Any` nas fronteiras; contratos Pydantic, documentos, valores monetários, conexões SQLite/PostgreSQL e parâmetros dos serviços têm tipos explícitos. Não há `type: ignore` no pacote. A API declara `response_model=None` nas rotas com retorno JSON para preservar o comportamento e o contrato OpenAPI anteriores às anotações.
+
+A cobertura de `cotera/` inclui ramificações e todos os módulos, inclusive o terminal. A medição local em Python 3.12.16 foi de **90,41%**, com 138 testes aprovados, 1 skip de PostgreSQL e piso de **90,0%**. O job `lint` verifica Ruff e mypy; o job `test` mantém Python 3.12/3.14, PostgreSQL e Tesseract, gera o relatório `term-missing` e publica `coverage.xml` como artefato por versão. Os [comandos locais](../README.md#qualidade-de-código) usam apenas as dependências de desenvolvimento, sem ampliar `requirements.txt`.
 
 [Voltar ao README](../README.md)

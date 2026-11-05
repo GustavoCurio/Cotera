@@ -20,7 +20,7 @@ O prazo máximo é opcional e pertence à cesta. Se a necessidade exigir até se
 
 ## Evidências técnicas
 
-O [relatório de avaliação](../reports/evaluation.json) contém oito casos sintéticos com resultado esperado e observado. Os [testes](../tests/test_cotera.py) exercitam documentos reais do exemplo, contratos, fonte dos campos, concorrência, API e navegação.
+O [relatório de avaliação](../reports/evaluation.json) contém oito casos sintéticos com resultado esperado e observado. Os [testes](../tests/) exercitam documentos reais do exemplo, contratos, fonte dos campos, concorrência, API e navegação.
 
 As propostas são deduplicadas por hash dos bytes dentro da cotação. As decisões guardam o valor aprovado e a versão do conjunto; uma tentativa baseada em uma fotografia anterior é recusada.
 

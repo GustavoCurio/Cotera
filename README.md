@@ -210,7 +210,7 @@ Para reproduzir sem chave, inclusive na CI:
 
 ```bash
 python -m evals.run_llm_eval --baseline-only
-python -m pytest tests/test_llm_eval.py -q
+python -m pytest tests/evaluation/test_llm_eval.py -q
 ```
 
 A avaliação complementar de OCR tem [dois PDFs só-imagem e gabaritos independentes](evals/llm/scanned/manifest.json), separados dos 36 casos originais para manter a baseline padrão executável sem Tesseract. Com `por+eng` disponíveis:
@@ -288,6 +288,26 @@ Na validação desta alteração, em **Python 3.12.16: 138 testes passaram e 1 f
 Os testes locais cobrem PDF/TXT, limites, números ambíguos, dados ausentes, evidências inválidas, arredondamento, deduplicação, transações, decisões concorrentes, exportação, API e os fluxos da interface. Também verificam a oferta de IA por chave em ambiente/segredos, o modo local inicial, o botão de exemplo, o fallback do SQLite e a ausência da chave nos dados persistidos/exportados.
 
 Os testes de OCR real são pulados se o executável ou os idiomas necessários não estiverem instalados. Os demais verificam degradação sem dependência/executável/idioma, orçamento compartilhado, limites de saída, geração determinística das fixtures, páginas mistas e revisão humana na interface/API. A regeneração usa Pillow e a fonte Vera fornecida pelo ReportLab, com semente e metadados fixos, sem fontes do sistema nem API.
+
+### Qualidade de código
+
+Com o ambiente virtual ativado, instale as ferramentas e execute:
+
+```bash
+python -m pip install -r requirements-dev.txt
+python -m pytest --collect-only -q
+python -m pytest -q
+ruff check .
+ruff format --check .
+mypy
+python -m pytest --cov=cotera --cov-branch --cov-report=term-missing --cov-report=xml -q
+```
+
+A cobertura local de linhas e ramificações combinadas de `cotera/` é **90,41%**, medida em Python 3.12.16 com **138 testes aprovados e 1 skip** de PostgreSQL; a coleta permanece em **139 casos**. O piso é **90,0%**. A medição inclui todos os módulos do pacote, inclusive o terminal, sem exclusões para elevar a porcentagem. O CI publica `coverage.xml` por versão Python como artefato, sem serviço externo de cobertura.
+
+Os testes estão organizados por domínio em `tests/`, com fixtures compartilhadas em `tests/conftest.py`. Os marcadores `postgres`, `ocr` e `slow` permitem seleções, como `python -m pytest -m "not slow and not postgres"`. A suíte bloqueia a construção de clientes reais e envios à OpenAI; usa somente simuladores. Para rodar PostgreSQL, configure `COTERA_TEST_POSTGRES_URL`; para OCR real, instale Tesseract com `por+eng`. Sem esses pré-requisitos, os testes correspondentes são pulados.
+
+O Ruff verifica e formata todo o código Python com alvo 3.12 e largura de 120 caracteres. O mypy exige assinaturas tipadas em todo `cotera/`, incluindo a API; `app.py`, `tests/`, `scripts/` e `evals/` ficam fora deste primeiro escopo de tipagem. As configurações estão em `pyproject.toml`. As ferramentas ficam nas dependências de desenvolvimento; `requirements.txt` continua contendo apenas dependências de execução para o Streamlit Cloud.
 
 O [relatório de referência](reports/evaluation.json) registra **8/8 casos de conferência atendidos**: propostas completas, total incorreto, frete ausente, quantidade divergente, outra moeda, item repetido e item ausente. É um conjunto sintético de desenvolvimento; não demonstra precisão em documentos externos nem economia de horas em uma operação real.
 
