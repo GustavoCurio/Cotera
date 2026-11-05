@@ -127,8 +127,13 @@ def run_evaluation(manifest_path=DATASET, *, models=(), clients=None, pricing=No
     runs = []
     for model in models:
         rows = [evaluate_case(c, 'ai', client=clients[model], model=model, budget=budget, rates=rates[model]) for c in cases]
+        attempted = sum(row['attempted'] for row in rows)
         runs.append({'model': model, 'kind': 'real' if real else 'simulated', 'rates_usd_per_million_tokens': rates[model],
+                     'status': 'completed' if attempted == len(cases) else ('partial' if attempted else 'not_run'),
                      'metrics': summarize(rows), 'documents': rows})
+    any_calls = any(run['metrics']['attempted'] for run in runs)
+    if runs and not any_calls:
+        not_run_reason = 'Nenhuma chamada iniciada: o limite de orcamento impediu os envios.'
     fingerprint = json.dumps({'manifest': json.loads(Path(manifest_path).read_text('utf-8')),
                               'documents': [c['_document'].sha256 for c in cases]}, sort_keys=True, ensure_ascii=False)
     return {'report_version': 1, 'generated_at_utc': datetime.now(timezone.utc).isoformat(), 'python': platform.python_version(),
@@ -139,8 +144,8 @@ def run_evaluation(manifest_path=DATASET, *, models=(), clients=None, pricing=No
             'extraction': {'mode': 'ai', 'api': 'OpenAI Responses', 'max_output_tokens': 3500,
                            'instructions_sha256': sha256(INSTRUCTIONS.encode()).hexdigest(),
                            'schema_sha256': sha256(json.dumps(extraction_schema(), sort_keys=True).encode()).hexdigest()},
-            'llm': {'status': ('real_run' if real else 'simulated') if runs else 'not_run',
-                    'reason': None if runs else not_run_reason, 'runs': runs},
+            'llm': {'status': ('real_run' if real else 'simulated') if any_calls else 'not_run',
+                    'reason': None if any_calls else not_run_reason, 'runs': runs},
             'budget': {'limit_usd': str(budget.limit), 'accounted_upper_estimate_usd': str(budget.accounted),
                        'stopped': budget.stopped, 'method': 'Reserva por bytes UTF-8 + margem de framing e teto de saida; sem retries. Sem usage, mantem reserva e interrompe. Custos estimados com entrada integral, sem desconto de cache.'},
             'pricing': pricing if runs else None,
@@ -167,7 +172,8 @@ def markdown_report(report):
              '| Extrator | Aceitas | Campos | Precisão itens | Recall itens | Qtd. exata | Preço exato | Total correto | Evidência rejeitada | Falha schema | Injeção resistente |',
              '|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|']
     runs = [('Parser local', report['baseline']['metrics'])] + [
-        (r['model'] + (' (SIMULAÇÃO)' if r['kind'] == 'simulated' else ''), r['metrics']) for r in report['llm']['runs']]
+        (r['model'] + (' (SIMULAÇÃO)' if r['kind'] == 'simulated' else '') + (' (parcial)' if r['status'] == 'partial' else ''), r['metrics'])
+        for r in report['llm']['runs'] if r['metrics']['attempted']]
     for name, m in runs:
         lines.append('| ' + ' | '.join([name, pct(m['accepted']), pct(m['field_accuracy_micro']), pct(m['items']['precision']), pct(m['items']['recall']), pct(m['items']['quantity_exactness']), pct(m['items']['unit_price_exactness']), pct(m['total_correctness']), pct(m['evidence_rejection']), pct(m['schema_validation_failure']), pct(m['injection']['strict_resistance'])]) + ' |')
     lines += ['', '| Extrator | p50 (ms) | p95 (ms) | Tokens entrada/saída | Uso observado | Custo estimado total (US$) | Média/documento (US$) |', '|---|---:|---:|---:|---:|---:|---:|']

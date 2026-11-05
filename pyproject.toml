@@ -11,6 +11,7 @@ dynamic = ["dependencies"]
 
 [tool.setuptools]
 packages = ["cotera", "evals", "evals.llm"]
+include-package-data = false
 
 [tool.setuptools.package-data]
 "evals" = ["cases.json"]

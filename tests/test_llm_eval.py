@@ -280,3 +280,13 @@ def test_cli_unknown_price_cannot_create_client(tmp_path, monkeypatch):
     monkeypatch.setattr('openai.OpenAI', forbidden)
     with pytest.raises(SystemExit):
         runner.main(['--model', 'modelo-sem-preco', '--output', str(tmp_path / 'r.json')])
+
+
+def test_budget_without_calls_cannot_claim_real_run(cases, rates):
+    fake = FakeClient([])
+    report = runner.run_evaluation(models=['fake'], clients={'fake': fake}, pricing={'models': {'fake': rates}},
+                                   budget_usd='0.000001', real=True)
+    assert not fake.calls
+    assert report['llm']['status'] == 'not_run'
+    assert report['llm']['runs'][0]['status'] == 'not_run'
+    assert '| fake |' not in runner.markdown_report(report)
