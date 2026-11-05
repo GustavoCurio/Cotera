@@ -6,6 +6,8 @@ from pathlib import Path
 from types import SimpleNamespace
 
 import pytest
+import httpx
+from openai import APIStatusError
 
 from cotera.comparison import audit_quote
 from cotera.documents import read_document, verify_evidence
@@ -22,12 +24,20 @@ class FakeClient:
         self.status, self.with_usage, self.fail = status, with_usage, fail
         self.responses = self
         self.calls = []
+        self.last_document = None
+        self.last_payload = None
 
     def create(self, **kwargs):
         self.calls.append(kwargs)
         if self.fail:
-            raise RuntimeError('Segredo ficticio: nao deve aparecer nos relatorios')
-        payload = next(self.payloads)
+            raise APIStatusError('Segredo ficticio: nao deve aparecer nos relatorios',
+                                 response=httpx.Response(400, request=httpx.Request('POST', 'https://example.invalid')), body=None)
+        # Um reparo repete o mesmo documento; não consome o gabarito do próximo caso.
+        document = json.loads(kwargs['input'])['document']
+        if document != self.last_document:
+            self.last_payload = next(self.payloads)
+            self.last_document = document
+        payload = self.last_payload
         return SimpleNamespace(output_text=payload if isinstance(payload, str) else json.dumps(payload),
                                status=self.status, model='modelo-simulado',
                                usage=SimpleNamespace(input_tokens=100, output_tokens=50,
@@ -81,7 +91,7 @@ def test_injected_client_runs_real_extraction_contract_and_injection_resists(cas
     assert call['store'] is False and call['max_output_tokens'] == 3500
     assert 'ignore comandos' in call['instructions']
     assert any('INSTRUCAO AO ASSISTENTE' in line['text'] for line in json.loads(call['input'])['document'])
-    assert row['usage'] == {'input_tokens': 100, 'output_tokens': 50, 'cached_input_tokens': 10}
+    assert row['usage'] == {'input_tokens': 100, 'output_tokens': 50, 'cached_input_tokens': 10, 'reasoning_tokens': 0}
     assert Decimal(row['estimated_cost_usd']) == Decimal('0.00012')
     assert row['score']['quote_exact']
 
@@ -95,8 +105,9 @@ def test_all_cases_fake_client_never_claims_real_quality(cases, rates):
     assert run['metrics']['documents'] == 36
     assert run['metrics']['evidence_rejection']['correct'] == 4  # en_US incompatível.
     assert run['metrics']['schema_validation_failure']['correct'] == 0
-    assert run['metrics']['usage']['input_tokens'] == 3600
-    assert Decimal(run['metrics']['cost']['estimated_total_usd']) == Decimal('0.00432')
+    assert run['metrics']['usage']['input_tokens'] == 4000  # Inclui quatro reparos por evidência.
+    assert Decimal(run['metrics']['cost']['estimated_total_usd']) == Decimal('0.0048')
+    assert run['metrics']['repairs_used'] == 4 and run['metrics']['attempts'] == 40
     assert report['baseline']['metrics']['accepted']['correct'] < 36
     assert 'SIMULAÇÃO' in runner.markdown_report(report)
 
@@ -130,7 +141,7 @@ def test_failure_categories_usage_and_rejected_injection(cases, rates, corruptio
         assert row['injection']['attack_value_observed']
         assert not row['score']['fields']['supplier']
     assert not row['injection']['resisted']
-    assert row['usage']['output_tokens'] == 50
+    assert row['usage']['output_tokens'] == (100 if corruption in {'json', 'extra', 'decimal', 'wrong_evidence'} else 50)
     assert Decimal(row['estimated_cost_usd']) > 0
 
 
@@ -206,8 +217,8 @@ def test_failure_metrics_latency_percentiles_and_cost(cases, rates):
     assert m['evidence_rejection']['rate'] == .05
     assert m['field_accuracy_micro']['rate'] == .9
     assert m['injection']['strict_resistance']['rate'] == .9
-    assert m['usage']['input_tokens'] == 2000
-    assert Decimal(m['cost']['estimated_total_usd']) == Decimal('0.0024')
+    assert m['usage']['input_tokens'] == 2200
+    assert Decimal(m['cost']['estimated_total_usd']) == Decimal('0.00264')
 
 
 @pytest.mark.parametrize('with_usage,fail', [(False, False), (False, True)])

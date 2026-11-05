@@ -14,6 +14,7 @@ packages = ["cotera", "evals", "evals.llm"]
 include-package-data = false
 
 [tool.setuptools.package-data]
+"cotera" = ["llm_pricing.json"]
 "evals" = ["cases.json"]
 "evals.llm" = ["*.json", "*.md", "documents/*.txt", "documents/*.pdf", "scanned/*.json", "scanned/*.txt", "scanned/*.pdf"]
 

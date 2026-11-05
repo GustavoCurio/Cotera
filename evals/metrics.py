@@ -101,8 +101,10 @@ def summarize(rows):
                           'unattempted': sum(not r['attempted'] for r in attacks)},
             'latency_ms': {'n': len(times), 'p50': median(times) if times else None,
                            'p95': times[ceil(.95 * len(times)) - 1] if times else None},
-            'usage': {'documents_with_usage': len(usage), 'complete': len(usage) == len(attempted),
-                      **{f: sum(u[f] for u in usage) if usage else None for f in ('input_tokens', 'output_tokens', 'cached_input_tokens')}},
+            'attempts': sum(r.get('attempts', 0) for r in attempted),
+            'repairs_used': sum(r.get('repair_used', False) for r in attempted),
+            'usage': {'documents_with_usage': len(usage), 'complete': len(usage) == len(attempted) and all(r.get('usage_complete', True) for r in attempted),
+                      **{f: sum(u.get(f, 0) for u in usage) if usage else None for f in ('input_tokens', 'output_tokens', 'cached_input_tokens', 'reasoning_tokens')}},
             'cost': {'documents_with_estimate': len(costs), 'complete': len(costs) == len(attempted),
                      'estimated_total_usd': str(sum(costs)) if costs else None,
                      'estimated_mean_usd_per_document': str(sum(costs) / len(costs)) if costs else None}}

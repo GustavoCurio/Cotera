@@ -14,12 +14,14 @@ from pydantic import ValidationError
 from cotera.comparison import audit_quote
 from cotera.documents import read_document
 from cotera.extraction import INSTRUCTIONS, ProviderError, extract, extraction_schema
+from cotera.errors import BudgetError, EvidenceError, ExtractionValidationError, IncompleteResponseError
+from cotera.usage import PRICING_PATH
 from cotera.models import PurchaseRequest, QuoteDraft, QuoteItem
 from .budget import Budget, BudgetExceeded, ObservedClient, rates_for
 from .metrics import score_case, summarize
 
 DATASET = Path(__file__).resolve().parent / 'llm' / 'manifest.json'
-PRICING = DATASET.with_name('pricing.json')
+PRICING = PRICING_PATH
 
 
 def load_cases(manifest_path=DATASET):
@@ -46,6 +48,14 @@ def load_cases(manifest_path=DATASET):
 
 
 def failure_category(error, observer=None):
+    if isinstance(error, BudgetError):
+        return 'budget_skipped'
+    if isinstance(error, EvidenceError):
+        return 'evidence_rejected'
+    if isinstance(error, ExtractionValidationError):
+        return 'schema_validation_failure'
+    if isinstance(error, IncompleteResponseError):
+        return 'incomplete_response'
     cause = error.__cause__ if isinstance(error, ProviderError) else error
     if isinstance(cause, BudgetExceeded):
         return 'budget_skipped'
@@ -86,16 +96,21 @@ def attack_observed(case, observer, draft):
     return False
 
 
-def evaluate_case(case, mode='local', *, client=None, model=None, budget=None, rates=None):
+def evaluate_case(case, mode='local', *, client=None, model=None, budget=None, rates=None, pricing_date=None):
     observer = ObservedClient(client, budget, rates) if mode == 'ai' else None
     started = perf_counter()
     draft, audit = None, None
     status = 'accepted'
+    metadata = {}
+    error_code = None
     try:
-        draft, _ = extract(case['_document'], case['_request'], mode=mode, consent=mode == 'ai', client=observer, model=model)
+        draft, metadata = extract(case['_document'], case['_request'], mode=mode, consent=mode == 'ai', client=observer, model=model,
+                                  pricing={'checked_on': pricing_date, 'models': {model: rates}} if mode == 'ai' else None)
         audit = audit_quote(case['_request'], draft, case['_document'])
     except (ProviderError, ValueError) as error:
         status = failure_category(error, observer)
+        metadata = getattr(error, 'metadata', {})
+        error_code = getattr(error, 'code', None)
     elapsed = round((perf_counter() - started) * 1000, 3)
     attempted = mode == 'local' or observer.started
     score = score_case(case['_expected'], draft, case['_audit'], audit, case['_semantic'])
@@ -104,12 +119,15 @@ def evaluate_case(case, mode='local', *, client=None, model=None, budget=None, r
         injection = {'resisted': status == 'accepted' and score['quote_exact'],
                      'rejected': attempted and status != 'accepted',
                      'attack_value_observed': attack_observed(case, observer, draft)}
-    usage = observer.usage if observer else {'input_tokens': 0, 'output_tokens': 0, 'cached_input_tokens': 0}
-    cost = str(observer.cost) if observer and observer.cost is not None else ('0' if mode == 'local' else None)
+    usage = metadata.get('usage') if observer else {'input_tokens': 0, 'output_tokens': 0, 'cached_input_tokens': 0, 'reasoning_tokens': 0}
+    cost = metadata.get('estimated_cost_usd') if observer else '0'
     return {'id': case['id'], 'document': case['document'], 'sha256': case['_document'].sha256,
             'layout': case['layout'], 'tags': case['tags'], 'document_pages': case['_document'].to_dict()['pages'],
             'status': status, 'attempted': attempted,
             'elapsed_ms': elapsed if attempted else None, 'usage': usage, 'estimated_cost_usd': cost,
+            'attempts': metadata.get('attempts', 0), 'repair_used': metadata.get('repair_used', False),
+            'usage_complete': metadata.get('usage_complete', mode == 'local'),
+            'cost_is_estimate': True, 'pricing_date': metadata.get('pricing_date'), 'error_code': error_code,
             'response_model': getattr(observer.response, 'model', None) if observer else None,
             'draft': draft.model_dump(mode='json') if draft else None,
             'expected_audit': case['_audit'], 'observed_audit': audit, 'score': score, 'injection': injection}
@@ -127,7 +145,7 @@ def run_evaluation(manifest_path=DATASET, *, models=(), clients=None, pricing=No
     baseline = [evaluate_case(case) for case in cases]
     runs = []
     for model in models:
-        rows = [evaluate_case(c, 'ai', client=clients[model], model=model, budget=budget, rates=rates[model]) for c in cases]
+        rows = [evaluate_case(c, 'ai', client=clients[model], model=model, budget=budget, rates=rates[model], pricing_date=pricing.get('checked_on')) for c in cases]
         attempted = sum(row['attempted'] for row in rows)
         runs.append({'model': model, 'kind': 'real' if real else 'simulated', 'rates_usd_per_million_tokens': rates[model],
                      'status': 'completed' if attempted == len(cases) else ('partial' if attempted else 'not_run'),
@@ -143,12 +161,13 @@ def run_evaluation(manifest_path=DATASET, *, models=(), clients=None, pricing=No
                         'formats': dict(Counter(Path(c['document']).suffix for c in cases)),
                         'tags': dict(Counter(t for c in cases for t in c['tags']))},
             'extraction': {'mode': 'ai', 'api': 'OpenAI Responses', 'max_output_tokens': 3500,
+                           'max_attempts_per_generation': int(os.environ.get('COTERA_LLM_MAX_ATTEMPTS', '3')), 'max_repairs': 1,
                            'instructions_sha256': sha256(INSTRUCTIONS.encode()).hexdigest(),
                            'schema_sha256': sha256(json.dumps(extraction_schema(), sort_keys=True).encode()).hexdigest()},
             'llm': {'status': ('real_run' if real else 'simulated') if any_calls else 'not_run',
                     'reason': None if any_calls else not_run_reason, 'runs': runs},
             'budget': {'limit_usd': str(budget.limit), 'accounted_upper_estimate_usd': str(budget.accounted),
-                       'stopped': budget.stopped, 'method': 'Reserva por bytes UTF-8 + margem de framing e teto de saida; sem retries. Sem usage, mantem reserva e interrompe. Custos estimados com entrada integral, sem desconto de cache.'},
+                       'stopped': budget.stopped, 'method': 'Reserva por envio (inclui retries e reparo), bytes UTF-8 + framing e teto de saída. Sem usage, mantém reserva e interrompe. Cache usa tarifa configurada ou entrada integral.'},
             'pricing': pricing if runs else None,
             'baseline': {'mode': 'local', 'metrics': summarize(baseline), 'documents': baseline},
             'methodology': [
@@ -158,7 +177,7 @@ def run_evaluation(manifest_path=DATASET, *, models=(), clients=None, pricing=No
                 'Total correctness usa somente casos cujo gabarito permite calcular total; total_state_accuracy inclui os nulos. Nenhuma moeda e convertida. Elegibilidade e medida separadamente.',
                 'Taxas de rejeicao de evidencia e falha de schema/Pydantic usam chamadas tentadas; respostas incompletas e erros do provedor sao categorias separadas.',
                 'Injecao: resistencia estrita exige extracao aceita e todos os valores corretos; rejeicoes sao registradas separadamente. Valores-alvo sao inspecionados mesmo em respostas rejeitadas. Quatro ataques nao demonstram seguranca geral.',
-                'Latencia inclui chamada, validacao e evidencia (sem leitura do arquivo); p50 e mediana, p95 nearest-rank. Sem aquecimento, retries ou repeticoes; amostra pequena.',
+                'Latência inclui chamadas, retries, reparo único, validação e evidência (sem leitura do arquivo); p50 é mediana, p95 nearest-rank. Sem aquecimento ou repetições estatísticas; amostra pequena.',
                 'Tokens e custos sao observados por documento, inclusive quando a validacao falha. Usage ausente permanece null. Estimativas nao substituem a fatura. Baseline local nao usa tokens nem API.',
                 'Dataset sintetico de desenvolvimento, sem validacao externa ou estimativa de ganhos em producao. O verificador atual nao suporta en_US; esses casos permanecem no denominador.',
                 'Quando ha OCR, document_pages registra metodo e confianca media por pagina; expected_audit e observed_audit sinalizam revisao humana. A latencia de extracao nao inclui renderizacao/OCR, feitos durante a leitura do dataset. Confianca OCR nao e probabilidade de acerto dos valores.'
@@ -178,9 +197,9 @@ def markdown_report(report):
         for r in report['llm']['runs'] if r['metrics']['attempted']]
     for name, m in runs:
         lines.append('| ' + ' | '.join([name, pct(m['accepted']), pct(m['field_accuracy_micro']), pct(m['items']['precision']), pct(m['items']['recall']), pct(m['items']['quantity_exactness']), pct(m['items']['unit_price_exactness']), pct(m['total_correctness']), pct(m['evidence_rejection']), pct(m['schema_validation_failure']), pct(m['injection']['strict_resistance'])]) + ' |')
-    lines += ['', '| Extrator | p50 (ms) | p95 (ms) | Tokens entrada/saída | Uso observado | Custo estimado total (US$) | Média/documento (US$) |', '|---|---:|---:|---:|---:|---:|---:|']
+    lines += ['', '| Extrator | p50 (ms) | p95 (ms) | Tokens entrada/saída | Cache/raciocínio | Tentativas/correções | Uso observado | Custo estimado total (US$) | Média/documento (US$) |', '|---|---:|---:|---:|---:|---:|---:|---:|---:|']
     for name, m in runs:
-        lines.append(f"| {name} | {m['latency_ms']['p50']} | {m['latency_ms']['p95']} | {m['usage']['input_tokens']} / {m['usage']['output_tokens']} | {m['usage']['documents_with_usage']}/{m['attempted']} | {m['cost']['estimated_total_usd']} | {m['cost']['estimated_mean_usd_per_document']} |")
+        lines.append(f"| {name} | {m['latency_ms']['p50']} | {m['latency_ms']['p95']} | {m['usage']['input_tokens']} / {m['usage']['output_tokens']} | {m['usage']['cached_input_tokens']} / {m['usage']['reasoning_tokens']} | {m['attempts']} / {m['repairs_used']} | {m['usage']['documents_with_usage']}/{m['attempted']} | {m['cost']['estimated_total_usd']} | {m['cost']['estimated_mean_usd_per_document']} |")
     lines += ['', '| Campo | ' + ' | '.join(n for n, _ in runs) + ' |', '|---|' + '---:|' * len(runs)]
     for field in report['baseline']['metrics']['per_field_accuracy']:
         lines.append('| ' + field + ' | ' + ' | '.join(pct(m['per_field_accuracy'][field]) for _, m in runs) + ' |')

@@ -1,40 +1,15 @@
-"""Limite conservador de US$ 3, compartilhado entre modelos; sem retries."""
+"""Limite conservador de US$ 3, compartilhado por todos os envios e modelos."""
 import json
 from decimal import Decimal
+from cotera.errors import BudgetError
+from cotera.usage import estimated_cost, rates_for, usage_from
 
 MILLION = Decimal(1_000_000)
 MAX_BUDGET_USD = Decimal('3')
 
 
-class BudgetExceeded(RuntimeError):
+class BudgetExceeded(BudgetError):
     """Chamada não iniciada porque a reserva excederia o orçamento."""
-
-
-def rates_for(pricing, model):
-    rates = pricing['models'][model]
-    for name in ('input', 'output'):
-        if not Decimal(rates[name]).is_finite() or Decimal(rates[name]) <= 0:
-            raise ValueError('Precos de entrada e saida devem ser positivos e finitos.')
-    return rates
-
-
-def usage_from(response):
-    usage = getattr(response, 'usage', None)
-    if usage is None:
-        return None
-    incoming, outgoing = getattr(usage, 'input_tokens', None), getattr(usage, 'output_tokens', None)
-    details = getattr(usage, 'input_tokens_details', None)
-    cached = getattr(details, 'cached_tokens', 0) or 0
-    if not isinstance(incoming, int) or not isinstance(outgoing, int) or min(incoming, outgoing, cached) < 0 or cached > incoming:
-        return None
-    return {'input_tokens': incoming, 'output_tokens': outgoing, 'cached_input_tokens': cached}
-
-
-def estimated_cost(usage, rates):
-    if usage is None:
-        return None
-    # Usa preço integral de entrada, inclusive cache: estimativa conservadora e reproduzível.
-    return (usage['input_tokens'] * Decimal(rates['input']) + usage['output_tokens'] * Decimal(rates['output'])) / MILLION
 
 
 class Budget:
@@ -52,7 +27,7 @@ class Budget:
         outgoing = kwargs['max_output_tokens']
         amount = (incoming * Decimal(rates['input']) + outgoing * Decimal(rates['output'])) / MILLION
         if self.stopped or self.accounted + amount > self.limit:
-            raise BudgetExceeded('Orcamento insuficiente para reservar a proxima chamada.')
+            raise BudgetExceeded()
         self.accounted += amount
         return amount
 
@@ -73,17 +48,16 @@ class ObservedClient:
         self.client, self.budget, self.rates = client, budget, rates
         self.responses = self
         self.response = None
-        self.usage = None
-        self.cost = None
         self.started = False
 
     def create(self, **kwargs):
         reserved = self.budget.reserve(kwargs, self.rates)
         self.started = True
+        usage = None
         try:
             self.response = self.client.responses.create(**kwargs)
-            self.usage = usage_from(self.response)
-            self.cost = estimated_cost(self.usage, self.rates)
+            usage = usage_from(self.response)
             return self.response
         finally:
-            self.budget.settle(reserved, self.usage, self.rates)
+            # Nunca reutiliza usage da chamada anterior se o próximo envio falhar.
+            self.budget.settle(reserved, usage, self.rates)
