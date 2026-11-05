@@ -1,22 +1,19 @@
 """Avaliação sem rede: fixtures fictícias não são resultados de modelos reais."""
 
+import json
 from copy import deepcopy
 from decimal import Decimal
-import json
-from pathlib import Path
 from types import SimpleNamespace
 
-import pytest
 import httpx
+import pytest
 from openai import APIStatusError
 
-from cotera.comparison import audit_quote
 from cotera.documents import read_document, verify_evidence
-from cotera.models import QuoteDraft
-from evals.budget import Budget, BudgetExceeded, ObservedClient, estimated_cost, usage_from
+from evals import run_llm_eval as runner
+from evals.budget import Budget, estimated_cost, usage_from
 from evals.llm.generate_dataset import generate
 from evals.metrics import item_counts, score_case, summarize
-from evals import run_llm_eval as runner
 
 
 class FakeClient:

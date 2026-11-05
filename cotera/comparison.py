@@ -1,8 +1,9 @@
 """Cálculos determinísticos para propostas da mesma cesta; IA não escolhe fornecedor."""
 
-from decimal import Decimal, ROUND_HALF_UP
-from .models import PurchaseRequest, QuoteDraft
+from decimal import ROUND_HALF_UP, Decimal
+
 from .documents import Document
+from .models import PurchaseRequest, QuoteDraft
 
 
 def money(value: Decimal) -> Decimal:

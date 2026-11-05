@@ -1,14 +1,15 @@
 """Extração opcional com retries limitados, reparo único, evidências e uso observado."""
 
-from datetime import datetime, timezone
-from decimal import Decimal
-from email.utils import parsedate_to_datetime
 import json
 import logging
 import math
 import os
+from datetime import UTC, datetime
+from decimal import Decimal
+from email.utils import parsedate_to_datetime
 from random import random
-from time import perf_counter, sleep as time_sleep
+from time import perf_counter
+from time import sleep as time_sleep
 
 import httpx
 from openai import APIConnectionError, OpenAIError
@@ -81,7 +82,7 @@ def retry_delay(error, attempt, jitter=random):
         except ValueError:
             try:
                 date = parsedate_to_datetime(header)
-                seconds = (date - datetime.now(timezone.utc)).total_seconds()
+                seconds = (date - datetime.now(UTC)).total_seconds()
             except (ValueError, TypeError, OverflowError):
                 seconds = 0
         if math.isfinite(seconds):

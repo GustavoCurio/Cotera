@@ -1,23 +1,25 @@
 """Avalia extração real e baseline local: python -m evals.run_llm_eval --help."""
 
 import argparse
-from collections import Counter
-from datetime import datetime, timezone
-from decimal import Decimal
-from hashlib import sha256
 import json
 import os
-from pathlib import Path
 import platform
+from collections import Counter
+from datetime import UTC, datetime
+from decimal import Decimal
+from hashlib import sha256
+from pathlib import Path
 from time import perf_counter
 
 from pydantic import ValidationError
+
 from cotera.comparison import audit_quote
 from cotera.documents import read_document
-from cotera.extraction import INSTRUCTIONS, ProviderError, extract, extraction_schema
 from cotera.errors import BudgetError, EvidenceError, ExtractionValidationError, IncompleteResponseError
-from cotera.usage import PRICING_PATH
+from cotera.extraction import INSTRUCTIONS, ProviderError, extract, extraction_schema
 from cotera.models import PurchaseRequest, QuoteDraft, QuoteItem
+from cotera.usage import PRICING_PATH
+
 from .budget import Budget, BudgetExceeded, ObservedClient, rates_for
 from .metrics import score_case, summarize
 
@@ -226,7 +228,7 @@ def run_evaluation(
     )
     return {
         "report_version": 1,
-        "generated_at_utc": datetime.now(timezone.utc).isoformat(),
+        "generated_at_utc": datetime.now(UTC).isoformat(),
         "python": platform.python_version(),
         "dataset": {
             "size": len(cases),
@@ -384,7 +386,7 @@ def main(argv=None):
         for model in models:
             try:
                 rates_for(pricing, model)
-            except (KeyError, ValueError) as error:
+            except (KeyError, ValueError):
                 parser.error(f"Sem precos validos para {model}; atualize --pricing antes de qualquer chamada.")
         clients = {m: OpenAI(api_key=key, timeout=30, max_retries=0) for m in models}
     elif key:

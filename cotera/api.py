@@ -1,18 +1,20 @@
 """Integração HTTP para cestas, extração, comparação e decisão versionada."""
 
-from functools import lru_cache
 import hmac
 import os
+from functools import lru_cache
 from typing import Literal
+
 from fastapi import Depends, FastAPI, File, Form, Header, HTTPException, UploadFile
 from fastapi.responses import HTMLResponse
 from pydantic import ValidationError
-from .documents import MAX_BYTES, read_document
-from .extraction import ProviderError, extract
+
+from .documents import MAX_BYTES
+from .extraction import ProviderError
 from .models import Decision, PurchaseRequest
 from .reports import report_html
-from .store import ConflictError, Store
 from .service import add_document
+from .store import ConflictError, Store
 
 
 def authorize(x_cotera_key: str = Header(default="")):

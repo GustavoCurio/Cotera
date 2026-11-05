@@ -1,34 +1,17 @@
 """Verificação dos limites, evidências, cálculos, transações, API e interface."""
 
-from copy import deepcopy
-from decimal import Decimal
-from io import BytesIO
-import json
-import os
-from pathlib import Path
-from types import SimpleNamespace
 from concurrent.futures import ThreadPoolExecutor
+from pathlib import Path
+
 import pytest
-from fastapi.testclient import TestClient
-from pydantic import ValidationError
-from pypdf import PdfWriter
-from streamlit.testing.v1 import AppTest
-from cotera import api
+
 from cotera import store as store_module
-from cotera.comparison import audit_quote, compare
 from cotera.demo import DATA, demo_request, seed_demo
-from cotera.documents import MAX_BYTES, br_number, extract_template, read_document, verify_evidence
-from cotera.evaluation import evaluate
-from cotera.extraction import ProviderError, extract
-from cotera.models import Decision, PurchaseRequest, QuoteDraft
-from cotera.reports import comparison_csv, report_html, snapshot_json
+from cotera.models import Decision
 from cotera.service import add_document
 from cotera.store import ConflictError, Store
 
 ROOT = DATA.parent
-
-
-from tests.fakes import FakeResponses
 
 
 def test_same_document_deduplicates_without_changing_version(store, document):
@@ -72,10 +55,9 @@ def test_transaction_rollback_and_sql_is_data(store):
     malicious = demo_request().model_copy(update={"title": "'; DROP TABLE purchases; --"})
     identifier = store.create(malicious)["id"]
     assert store.get(identifier)["request"]["title"] == malicious.title
-    with pytest.raises(RuntimeError):
-        with store.connection(write=True) as connection:
-            store.execute(connection, "UPDATE purchases SET version=99 WHERE id=?", (identifier,))
-            raise RuntimeError("rollback")
+    with pytest.raises(RuntimeError), store.connection(write=True) as connection:
+        store.execute(connection, "UPDATE purchases SET version=99 WHERE id=?", (identifier,))
+        raise RuntimeError("rollback")
     assert store.get(identifier)["version"] == 1
 
 

@@ -1,19 +1,20 @@
 """Mesa de compras Cotera: cesta, propostas lado a lado e decisão documentada."""
 
+import os
 from decimal import Decimal
 from html import escape
-import os
 from pathlib import Path
+
 import streamlit as st
-from streamlit.errors import StreamlitSecretNotFoundError
 from pydantic import ValidationError
+from streamlit.errors import StreamlitSecretNotFoundError
+
 from cotera.demo import DATA, seed_demo
-from cotera.documents import read_document
-from cotera.extraction import ProviderError, extract
+from cotera.extraction import ProviderError
 from cotera.models import Decision, PurchaseRequest
 from cotera.reports import brl, comparison_csv, report_html, snapshot_json
-from cotera.store import ConflictError, Store, default_sqlite_url
 from cotera.service import add_document
+from cotera.store import ConflictError, Store, default_sqlite_url
 
 st.set_page_config(page_title="Cotera · Mesa de compras", page_icon="◒", layout="wide")
 st.markdown(
@@ -226,7 +227,7 @@ if view == "Comparar":
             # No máximo três cartões por linha, mesmo com dez propostas.
             for start in range(0, len(proposals), 3):
                 columns = st.columns(min(3, len(proposals) - start))
-                for column, p in zip(columns, proposals[start : start + 3]):
+                for column, p in zip(columns, proposals[start : start + 3], strict=False):
                     q, audit = p["draft"], p["audit"]
                     best = p["id"] in snapshot["lowest_cost_ids"]
                     label = (

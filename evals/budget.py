@@ -2,8 +2,10 @@
 
 import json
 from decimal import Decimal
+
 from cotera.errors import BudgetError
-from cotera.usage import estimated_cost, rates_for, usage_from
+from cotera.usage import estimated_cost, usage_from
+from cotera.usage import rates_for as rates_for
 
 MILLION = Decimal(1_000_000)
 MAX_BUDGET_USD = Decimal("3")

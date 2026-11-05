@@ -2,7 +2,8 @@
 
 from decimal import Decimal
 from typing import Annotated, Literal
-from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
+
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 Amount = Annotated[Decimal, Field(ge=0, le=Decimal("100000000"), max_digits=14, decimal_places=2)]
 Quantity = Annotated[Decimal, Field(gt=0, le=Decimal("1000000"), max_digits=12, decimal_places=3)]

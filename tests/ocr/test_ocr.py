@@ -1,10 +1,9 @@
 """OCR real sem API; falhas e orçamento são exercitados também sem Tesseract."""
 
-from io import BytesIO
 import json
-import shutil
 import subprocess
 import sys
+from io import BytesIO
 
 import pytest
 from fastapi.testclient import TestClient
@@ -165,7 +164,7 @@ def test_missing_tesseract_degrades_to_clear_rejection(monkeypatch):
     pytesseract = pytest.importorskip("pytesseract")
     monkeypatch.setattr(pytesseract.pytesseract, "tesseract_cmd", "/tesseract-ausente/cotera")
     path = SCANNED / "aurora_escaneada.pdf"
-    with pytest.raises(ValueError, match="sem texto selecionável.*Tesseract"):
+    with pytest.raises(ValueError, match=r"sem texto selecionável.*Tesseract"):
         read_document(path.read_bytes(), path.name)
     # A falta do executável não prejudica o caminho textual.
     textual = DATA / "proposals" / "aurora.pdf"
@@ -176,7 +175,7 @@ def test_missing_tesseract_degrades_to_clear_rejection(monkeypatch):
 def test_missing_python_ocr_dependency_degrades_to_clear_rejection(monkeypatch, module):
     monkeypatch.setitem(sys.modules, module, None)
     path = SCANNED / "aurora_escaneada.pdf"
-    with pytest.raises(ValueError, match="sem texto selecionável.*OCR local indisponível"):
+    with pytest.raises(ValueError, match=r"sem texto selecionável.*OCR local indisponível"):
         read_document(path.read_bytes(), path.name)
 
 
@@ -184,7 +183,7 @@ def test_missing_portuguese_cannot_silently_use_only_english(monkeypatch):
     pytest.importorskip("pytesseract")
     monkeypatch.setattr(ocr.subprocess, "run", lambda *a, **k: subprocess.CompletedProcess(a, 0, stdout="eng\n"))
     path = SCANNED / "aurora_escaneada.pdf"
-    with pytest.raises(ValueError, match="sem texto selecionável.*por\\+eng"):
+    with pytest.raises(ValueError, match=r"sem texto selecionável.*por\+eng"):
         read_document(path.read_bytes(), path.name)
 
 

@@ -3,11 +3,12 @@
 import argparse
 import json
 from pathlib import Path
+
+from .comparison import audit_quote
 from .demo import demo_request, seed_demo
 from .documents import read_document
 from .evaluation import evaluate
 from .extraction import extract
-from .comparison import audit_quote
 from .store import Store
 
 

@@ -1,34 +1,16 @@
 """Verificação dos limites, evidências, cálculos, transações, API e interface."""
 
-from copy import deepcopy
-from decimal import Decimal
-from io import BytesIO
 import json
-import os
-from pathlib import Path
-from types import SimpleNamespace
-from concurrent.futures import ThreadPoolExecutor
-import pytest
-from fastapi.testclient import TestClient
-from pydantic import ValidationError
-from pypdf import PdfWriter
-from streamlit.testing.v1 import AppTest
-from cotera import api
-from cotera import store as store_module
+from copy import deepcopy
+
 from cotera.comparison import audit_quote, compare
 from cotera.demo import DATA, demo_request, seed_demo
-from cotera.documents import MAX_BYTES, br_number, extract_template, read_document, verify_evidence
+from cotera.documents import extract_template
 from cotera.evaluation import evaluate
-from cotera.extraction import ProviderError, extract
-from cotera.models import Decision, PurchaseRequest, QuoteDraft
+from cotera.models import PurchaseRequest, QuoteDraft
 from cotera.reports import comparison_csv, report_html, snapshot_json
-from cotera.service import add_document
-from cotera.store import ConflictError, Store
 
 ROOT = DATA.parent
-
-
-from tests.fakes import FakeResponses
 
 
 def test_round_half_up_and_unit_and_deadline(document):

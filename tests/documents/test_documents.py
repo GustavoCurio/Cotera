@@ -3,32 +3,17 @@
 from copy import deepcopy
 from decimal import Decimal
 from io import BytesIO
-import json
-import os
-from pathlib import Path
-from types import SimpleNamespace
-from concurrent.futures import ThreadPoolExecutor
+
 import pytest
-from fastapi.testclient import TestClient
 from pydantic import ValidationError
 from pypdf import PdfWriter
-from streamlit.testing.v1 import AppTest
-from cotera import api
-from cotera import store as store_module
-from cotera.comparison import audit_quote, compare
-from cotera.demo import DATA, demo_request, seed_demo
+
+from cotera.comparison import audit_quote
+from cotera.demo import DATA, demo_request
 from cotera.documents import MAX_BYTES, br_number, extract_template, read_document, verify_evidence
-from cotera.evaluation import evaluate
-from cotera.extraction import ProviderError, extract
-from cotera.models import Decision, PurchaseRequest, QuoteDraft
-from cotera.reports import comparison_csv, report_html, snapshot_json
-from cotera.service import add_document
-from cotera.store import ConflictError, Store
+from cotera.models import PurchaseRequest, QuoteDraft
 
 ROOT = DATA.parent
-
-
-from tests.fakes import FakeResponses
 
 
 @pytest.mark.parametrize("text,value", [("R$ 1.405,00", "1405"), ("0,00", "0"), ("1,125", "1.125"), ("1.000", "1000")])

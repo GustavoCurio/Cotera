@@ -1,7 +1,7 @@
 """Avaliação reproduzível do parser local e das regras, em conjunto sintético explícito."""
 
 import json
-from pathlib import Path
+
 from .comparison import audit_quote
 from .demo import DATA, demo_request
 from .documents import extract_template, read_document

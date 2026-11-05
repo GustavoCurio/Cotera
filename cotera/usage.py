@@ -1,8 +1,8 @@
 """Uso e estimativas em USD; cache e raciocínio são subconjuntos, nunca tokens extras."""
 
-from decimal import Decimal
 import json
 import os
+from decimal import Decimal
 from pathlib import Path
 
 PRICING_PATH = Path(__file__).with_name("llm_pricing.json")

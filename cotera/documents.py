@@ -1,13 +1,16 @@
 """Leitura limitada de PDF/TXT com OCR local e parser do modelo Cotera."""
 
-from dataclasses import asdict, dataclass, field
+import re
+from dataclasses import asdict, dataclass
+from dataclasses import field as dataclass_field
 from decimal import Decimal, InvalidOperation
 from hashlib import sha256
 from io import BytesIO
 from pathlib import Path
-import re
 from typing import Literal
+
 from pypdf import PdfReader
+
 from .models import QuoteDraft
 from .ocr import NO_TEXT, read_scanned_pages
 
@@ -46,7 +49,7 @@ class Document:
     filename: str
     sha256: str
     lines: list[str]
-    pages: list[PageProvenance] = field(default_factory=list)
+    pages: list[PageProvenance] = dataclass_field(default_factory=list)
 
     def to_dict(self):
         """Serializa a evidência mantida junto da proposta."""

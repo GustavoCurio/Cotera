@@ -1,7 +1,8 @@
 """Cesta e propostas de fornecedores fictícios para explorar o Cotera."""
 
-from pathlib import Path
 from hashlib import sha256
+from pathlib import Path
+
 from .documents import read_document
 from .extraction import extract
 from .models import PurchaseRequest

@@ -1,13 +1,13 @@
 """Gera três PDFs só-imagem determinísticos, sem OCR, rede ou fontes do sistema."""
 
 import argparse
-from io import BytesIO
 import json
-from pathlib import Path
 import random
+from io import BytesIO
+from pathlib import Path
 
-from PIL import Image, ImageDraw, ImageFont
 import reportlab
+from PIL import Image, ImageDraw, ImageFont
 from reportlab.lib.utils import ImageReader
 from reportlab.pdfgen.canvas import Canvas
 
@@ -80,7 +80,9 @@ def generate_evaluation(scanned, target):
         (target / source_name).write_bytes((ROOT / "data" / "proposals" / (source + ".txt")).read_bytes())
         items = [
             dict(sku=sku, quantity=q, unit="un", unit_price=p, source_line=line)
-            for sku, q, p, line in zip(["PAP-A4", "CAN-AZ", "ORG-M"], ["20", "50", "10"], prices, [10, 11, 12])
+            for sku, q, p, line in zip(
+                ["PAP-A4", "CAN-AZ", "ORG-M"], ["20", "50", "10"], prices, [10, 11, 12], strict=False
+            )
         ]
         expected = dict(
             supplier=supplier,

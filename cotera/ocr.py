@@ -1,11 +1,11 @@
 """OCR local limitado; importações opcionais não afetam PDFs textuais nem TXT."""
 
 import csv
-from contextlib import closing
-from io import StringIO
 import math
 import os
 import subprocess
+from contextlib import closing
+from io import StringIO
 from time import monotonic
 
 NO_TEXT = "Documento vazio, sem texto selecionável ou acima dos limites de leitura."
@@ -55,17 +55,16 @@ def read_scanned_pages(content: bytes, indexes: list[int]) -> dict[int, tuple[st
                     width, height = page.get_size()
                     # 200 dpi para A4; lado máximo de 3000 px também em PDFs enormes.
                     scale = min(200 / 72, 3000 / max(width, height))
-                    with closing(page.render(scale=scale, grayscale=True)) as bitmap:
-                        with bitmap.to_pil() as image:
-                            # TSV dá texto e confiança na mesma execução. A função de baixo
-                            # nível evita a consulta de versão sem timeout de image_to_data.
-                            tsv = pytesseract.pytesseract.run_and_get_output(
-                                image,
-                                extension="tsv",
-                                lang="por+eng",
-                                config="--psm 6 -c tessedit_create_tsv=1",
-                                timeout=remaining(),
-                            )
+                    with closing(page.render(scale=scale, grayscale=True)) as bitmap, bitmap.to_pil() as image:
+                        # TSV dá texto e confiança na mesma execução. A função de baixo
+                        # nível evita a consulta de versão sem timeout de image_to_data.
+                        tsv = pytesseract.pytesseract.run_and_get_output(
+                            image,
+                            extension="tsv",
+                            lang="por+eng",
+                            config="--psm 6 -c tessedit_create_tsv=1",
+                            timeout=remaining(),
+                        )
                 remaining()
                 lines, confidences = {}, []
                 for row in csv.DictReader(StringIO(tsv), delimiter="\t", quoting=csv.QUOTE_NONE):

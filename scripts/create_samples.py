@@ -1,7 +1,8 @@
 """Reproduz propostas fictícias em TXT/PDF e casos de conferência, sem dados externos."""
 
-from pathlib import Path
 import json
+from pathlib import Path
+
 from reportlab.lib import colors
 from reportlab.lib.pagesizes import A4
 from reportlab.pdfgen import canvas

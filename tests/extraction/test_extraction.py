@@ -1,18 +1,18 @@
 """Robustez e custo do LLM com clientes falsos; nenhuma chamada externa."""
 
+import json
 from copy import deepcopy
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from decimal import Decimal
 from email.utils import format_datetime
-import json
 from types import SimpleNamespace
 
 import httpx
 import pytest
 from openai import APIConnectionError, APIStatusError, APITimeoutError
 
-from cotera.demo import DATA, demo_request
-from cotera.documents import extract_template, read_document
+from cotera.demo import demo_request
+from cotera.documents import extract_template
 from cotera.errors import (
     AuthenticationProviderError,
     BudgetError,
@@ -25,7 +25,7 @@ from cotera.errors import (
 )
 from cotera.extraction import extract, extraction_schema, retry_delay
 from cotera.models import QuoteDraft
-from cotera.usage import estimated_cost, usage_from
+from cotera.usage import usage_from
 
 
 def response(payload, *, usage=True, **kwargs):
@@ -127,7 +127,7 @@ def test_retry_after_seconds_and_date(document):
     waits = []
     run(document, fake, sleep=waits.append, jitter=lambda: 0)
     assert waits == [7]
-    date = format_datetime(datetime.now(timezone.utc) + timedelta(seconds=30), usegmt=True)
+    date = format_datetime(datetime.now(UTC) + timedelta(seconds=30), usegmt=True)
     assert 28 <= retry_delay(status_error(503, {"Retry-After": date}), 1, lambda: 0) <= 30
     for header in ("invalido", "NaN", "-1"):
         assert retry_delay(status_error(429, {"Retry-After": header}), 1, lambda: 0.1) == 1.1

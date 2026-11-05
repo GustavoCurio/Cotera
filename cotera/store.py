@@ -1,13 +1,14 @@
 """Persistência transacional em SQLite/PostgreSQL, propostas imutáveis e decisões versionadas."""
 
-from contextlib import contextmanager
-from datetime import datetime, timezone
 import json
 import os
-from pathlib import Path
 import sqlite3
 import tempfile
+from contextlib import contextmanager
+from datetime import UTC, datetime
+from pathlib import Path
 from uuid import uuid4
+
 from .comparison import compare
 from .documents import Document, verify_evidence
 from .models import Decision, PurchaseRequest, QuoteDraft
@@ -26,7 +27,7 @@ class ConflictError(RuntimeError):
 
 def now():
     """Data UTC com fuso explícito para histórico e exportação."""
-    return datetime.now(timezone.utc).isoformat()
+    return datetime.now(UTC).isoformat()
 
 
 def default_sqlite_url(filename="cotera.sqlite3"):

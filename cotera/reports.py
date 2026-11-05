@@ -1,10 +1,10 @@
 """Relatórios legíveis e exportações da fotografia comparada."""
 
 import csv
-from html import escape
-from io import StringIO
 import json
 from decimal import Decimal
+from html import escape
+from io import StringIO
 
 
 def brl(value):
@@ -72,4 +72,4 @@ def report_html(snapshot):
 <table><tr><th>Fornecedor</th><th>Referência</th><th>Total</th><th>Prazo em dias</th><th>Conferência</th></tr>{"".join(cards)}</table>
 <h2>Decisões registradas</h2><ol>{history or "<li>Nenhuma escolha registrada.</li>"}</ol>
 <small>Comparação determinística; não realiza compra nem envia pedidos. Valores e condições pertencem aos documentos anexados.</small></html>"""
-    ).encode("utf-8")
+    ).encode()

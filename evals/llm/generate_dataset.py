@@ -1,7 +1,7 @@
 """Reproduz documentos e rótulos fixos, sem consultar parser ou modelo de IA."""
 
 import json
-from decimal import Decimal, ROUND_HALF_UP
+from decimal import ROUND_HALF_UP, Decimal
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent
@@ -151,7 +151,7 @@ def build(index):
         truth["currency"] = None
         prefix = ""
         tags.append("moeda_ausente")
-    for field, label in zip(FIELDS, labels):
+    for field, label in zip(FIELDS, labels, strict=False):
         root(field, label)
     if layout in {"tabela_reordenada", "markdown"}:
         lines.append("Preco unitario | Unidade | Codigo | Quantidade | Descricao")
