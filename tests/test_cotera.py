@@ -77,7 +77,8 @@ def test_pdf_encrypted_blank_and_page_limit():
             writer.encrypt("secret")
         stream = BytesIO()
         writer.write(stream)
-        with pytest.raises(ValueError):
+        message = "sem texto selecionável" if pages == 1 and not encrypted else "sem senha, com até cinco páginas"
+        with pytest.raises(ValueError, match=message):
             read_document(stream.getvalue(), "blank.pdf")
 
 

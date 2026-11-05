@@ -1,16 +1,19 @@
-"""Leitura limitada de PDF textual/TXT e parser do modelo demonstrativo Cotera."""
-from dataclasses import asdict, dataclass
+"""Leitura limitada de PDF/TXT com OCR local e parser do modelo Cotera."""
+from dataclasses import asdict, dataclass, field
 from decimal import Decimal, InvalidOperation
 from hashlib import sha256
 from io import BytesIO
 from pathlib import Path
 import re
+from typing import Literal
 from pypdf import PdfReader
 from .models import QuoteDraft
+from .ocr import NO_TEXT, read_scanned_pages
 
 MAX_BYTES = 2 * 1024 * 1024
 MAX_PAGES = 5
 MAX_CHARS = 25_000
+MIN_PAGE_TEXT = 30  # caracteres alfanuméricos; cabeçalhos isolados não bastam.
 
 
 def br_number(text: str) -> Decimal:
@@ -25,11 +28,22 @@ def br_number(text: str) -> Decimal:
 
 
 @dataclass(frozen=True)
+class PageProvenance:
+    """Página de base um e intervalo inclusivo na numeração global de evidências."""
+    page: int
+    method: Literal["texto", "ocr"]
+    ocr_confidence: float | None = None  # média das palavras, na escala 0–100.
+    start_line: int | None = None
+    end_line: int | None = None
+
+
+@dataclass(frozen=True)
 class Document:
     """Texto por linhas e hash dos bytes originais; nenhum PDF é persistido."""
     filename: str
     sha256: str
     lines: list[str]
+    pages: list[PageProvenance] = field(default_factory=list)
 
     def to_dict(self):
         """Serializa a evidência mantida junto da proposta."""
@@ -37,30 +51,42 @@ class Document:
 
 
 def read_document(content: bytes, filename: str) -> Document:
-    """Lê até 2 MiB, cinco páginas e 25 mil caracteres; não executa OCR."""
+    """Lê até 2 MiB/cinco páginas; tenta OCR local em páginas com texto insuficiente."""
     name = Path(filename.replace("\\", "/")).name[:120]
     if not content or len(content) > MAX_BYTES:
         raise ValueError("Envie um arquivo não vazio de até 2 MB.")
     suffix = Path(name).suffix.lower()
+    methods, confidences = [], []
     if suffix == ".txt":
         try:
             text = content.decode("utf-8-sig")
         except UnicodeDecodeError as error:
             raise ValueError("O TXT precisa estar em UTF-8.") from error
+        fragments = [text]
+        methods, confidences = ["texto"], [None]
     elif suffix == ".pdf":
         try:
             pdf = PdfReader(BytesIO(content), strict=True)
             if pdf.is_encrypted or not 1 <= len(pdf.pages) <= MAX_PAGES:
                 raise ValueError("Use um PDF sem senha, com até cinco páginas.")
-            fragments = []
-            for page in pdf.pages:
+            fragments, scanned = [], []
+            for index, page in enumerate(pdf.pages):
                 # Limita também o fluxo descomprimido antes do processamento textual.
                 stream = page.get_contents()
-                if stream is not None and len(stream.get_data()) > 2_000_000:
+                data = stream.get_data() if stream is not None else b""
+                if len(data) > 2_000_000:
                     raise ValueError("Página PDF com conteúdo excessivo.")
                 fragments.append(page.extract_text(extraction_mode="plain") or "")
+                # Página estruturalmente vazia não precisa do motor OCR.
+                if data.strip() and sum(char.isalnum() for char in fragments[-1]) < MIN_PAGE_TEXT:
+                    scanned.append(index)
                 if sum(map(len, fragments)) > MAX_CHARS:
                     raise ValueError("O documento excede 25 mil caracteres.")
+            methods, confidences = ["texto"] * len(fragments), [None] * len(fragments)
+            if scanned:
+                for index, (ocr_text, confidence) in read_scanned_pages(content, scanned).items():
+                    fragments[index] = ocr_text
+                    methods[index], confidences[index] = "ocr", confidence
             text = "\n".join(fragments)
         except ValueError:
             raise
@@ -68,10 +94,16 @@ def read_document(content: bytes, filename: str) -> Document:
             raise ValueError("Não foi possível ler este PDF.") from error
     else:
         raise ValueError("Envie um PDF com texto selecionável ou um TXT.")
-    lines = [line.strip() for line in text.splitlines() if line.strip()]
+    lines, pages = [], []
+    for index, fragment in enumerate(fragments):
+        start = len(lines) + 1
+        page_lines = [line.strip() for line in fragment.splitlines() if line.strip()]
+        lines.extend(page_lines)
+        pages.append(PageProvenance(index + 1, methods[index], confidences[index],
+                                    start if page_lines else None, len(lines) if page_lines else None))
     if not lines or len(text) > MAX_CHARS or len(lines) > 1000 or any(len(line) > 2000 for line in lines):
-        raise ValueError("Documento vazio, sem texto selecionável ou acima dos limites de leitura.")
-    return Document(name, sha256(content).hexdigest(), lines)
+        raise ValueError(NO_TEXT)
+    return Document(name, sha256(content).hexdigest(), lines, pages)
 
 
 ROOT_FIELDS = {"Fornecedor": "supplier", "Referência": "reference", "Moeda": "currency",
