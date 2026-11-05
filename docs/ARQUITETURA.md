@@ -35,6 +35,20 @@ O texto nativo e o OCR compartilham a numeração global e a verificação de ev
 
 Um PDF pode ter suas células extraídas em linhas diferentes. O modo com IA não reúne evidências de várias linhas para um item nesta versão. Nessas situações a extração pode permanecer incompleta e a proposta fica pendente.
 
+## Robustez e observabilidade da IA
+
+`extraction.py` deriva o JSON Schema do contrato Pydantic no modo de serialização, preservando decimais como strings. O pós-processamento exige todos os campos, permite `null` onde o modelo permite e fecha cada objeto com `additionalProperties=false`. Restrições de domínio permanecem no Pydantic local. Um teste compara os campos, tipos e ausências com o antigo esquema manual.
+
+Erros 429/5xx e de timeout/conexão usam espera exponencial com jitter e `Retry-After` (segundos ou data HTTP). `max_attempts`, ou `COTERA_LLM_MAX_ATTEMPTS`, limita cada geração a três tentativas por padrão; o SDK usa `max_retries=0`. Erros permanentes não são repetidos. JSON/Pydantic inválido ou falha em `verify_evidence` permite uma única segunda geração com erros resumidos e o mesmo documento. Recusa ou resposta incompleta encerra a extração sem reparo. A função de espera e o jitter são injetáveis nos testes.
+
+`errors.py` mantém `ProviderError` como base compatível e distingue indisponibilidade transitória, autenticação/permissão, validação, evidência, recusa, resposta incompleta e orçamento. Cada erro possui `code`, mensagem pública em português e `metadata` com uso já observado. Os logs registram somente código e contadores, sem texto documental, resposta ou credenciais. Falhas inesperadas de programação não são convertidas em erros do provedor.
+
+`usage.py` lê tokens de entrada/saída, cache e raciocínio, somando as respostas de todas as tentativas. Cache e raciocínio são subconjuntos dos totais. `extraction` persiste `attempts`, `repair_used`, `elapsed_ms`, `usage`, `usage_complete`, `estimated_cost_usd`, `cost_is_estimate` e `pricing_date`. A interface apresenta as métricas em Documentos; inclusão e consulta pela API também as retornam. Erros HTTP 502 incluem código, mensagem segura e metadados. Reenvios idempotentes devolvem os metadados persistidos.
+
+A tabela compartilhada `cotera/llm_pricing.json` tem data, fontes e tarifas por milhão de tokens; admite preço opcional de cache. `pricing` ou `COTERA_LLM_PRICING_PATH` permite substituí-la. Modelo desconhecido, resposta sem uso ou erro de transporte impede afirmar custo total: a estimativa fica `null`, preservando os tokens conhecidos. Os limites opcionais por documento (`max_tokens`/`max_cost_usd`, também configuráveis por ambiente) reservam cada envio de forma conservadora e interrompem com `BudgetError` antes de exceder a reserva. Não representam uma garantia da cobrança final.
+
+O avaliador usa o mesmo extrator e os mesmos cálculos de consumo/custo. Seu orçamento global reserva cada envio, incluindo retries e reparo; sem uso, mantém a reserva e bloqueia novos envios. O proxy zera o uso por chamada antes de liquidar a reserva para não reutilizar contadores de uma resposta anterior. Relatórios incluem tentativas, correções, cache/raciocínio, uso incompleto e data de preços. Clientes falsos continuam rotulados como simulação; nenhum resultado novo de qualidade com modelo real foi medido.
+
 ## Persistência e concorrência
 
 Três tabelas mantêm cestas (`purchases`), propostas (`proposals`) e escolhas (`decisions`). As duas últimas referenciam a cesta; decisões também referenciam a proposta. A restrição única `(purchase_id, document_hash)` evita duplicação por reenvio dos mesmos bytes.

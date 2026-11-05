@@ -70,7 +70,7 @@ A diferença entre Aurora e Prumo é uma comparação de valores fictícios, nã
 
 Os exemplos estão em [data/proposals](data/proposals). O [gerador dos documentos](scripts/create_samples.py) reproduz os PDFs e TXTs a partir de valores explícitos.
 
-O botão **Carregar exemplo escaneado** abre na demonstração uma versão só-imagem da proposta Aurora, processada localmente. Em **Documentos**, o PDF escaneado também pode ser baixado para conferir os valores. Os [três PDFs de OCR](data/scanned) incluem um exemplo limpo, outro com leve ruído/rotação e um arquivo em branco, que deve ser rejeitado.
+O botão **Carregar exemplo escaneado** abre uma cesta demonstrativa própria, com a Aurora só-imagem no lugar da versão textual e as outras duas propostas. A confirmação informa o carregamento e aponta para **Comparar**. Os dois botões de exemplo reutilizam os arquivos pelo hash: cliques repetidos não duplicam propostas nem repetem OCR. Em **Documentos**, o PDF escaneado também pode ser baixado para conferir os valores. Os [três PDFs de OCR](data/scanned) incluem um exemplo limpo, outro com leve ruído/rotação e um arquivo em branco, que deve ser rejeitado.
 
 ## Como rodar localmente
 
@@ -192,6 +192,14 @@ A integração usa a Responses API com [Structured Outputs](https://developers.o
 
 O modo com IA admite outros layouts apenas quando consegue associar os valores a linhas de origem. Itens distribuídos em múltiplas linhas podem ficar incompletos e pendentes. O avaliador a seguir executa esse mesmo caminho de extração, com validação e regras; nesta entrega, somente a baseline local foi medida, pois não havia chave de API.
 
+### Falhas, novas tentativas e custo da IA
+
+Erros temporários (429, 5xx, timeout ou conexão) permitem até **três tentativas por geração**, com espera exponencial, jitter e respeito ao `Retry-After`. `COTERA_LLM_MAX_ATTEMPTS` altera esse limite (de 1 a 10); erros como 400, 401, 403 e 404 não são repetidos. Os retries internos do SDK ficam desativados. Uma saída com JSON/Pydantic inválido ou sem evidência permite **um único reparo**, enviando o documento e erros resumidos sem valores privados. Se falhar novamente, a extração termina com erro tipado e mensagem segura em português. Recusas e respostas incompletas encerram o fluxo. No padrão, são no máximo seis envios por documento, contando o reparo e seus retries.
+
+Os metadados somam tokens de entrada, saída, cache e raciocínio das respostas recebidas, registram tentativas, uso do reparo e latência total. Cache já integra a entrada; raciocínio já integra a saída. A interface em **Documentos**, a resposta da API (`extraction`) e o avaliador exibem esses dados e o **custo estimado em USD**. A tabela datada [llm_pricing.json](cotera/llm_pricing.json) é compartilhada; configure outra por `COTERA_LLM_PRICING_PATH` (aplicativo/API) ou `--pricing` (avaliador). O campo opcional `cached_input` aplica a tarifa de cache; sem ele, usa-se a entrada integral. Modelo sem preço ou consumo incompleto mantém o custo como `null`; tokens conhecidos ficam disponíveis com `usage_complete=false`. A fatura do provedor é a referência final.
+
+Limites opcionais por documento: `COTERA_LLM_MAX_TOKENS` e `COTERA_LLM_MAX_COST_USD` (ou `max_tokens`/`max_cost_usd` em `extract`). Cada envio, inclusive retry e reparo, reserva entrada por bytes UTF-8 com margem de enquadramento e teto de saída, sem liberar a reserva entre tentativas. É um limite conservador, que pode interromper antes do consumo efetivo; custo máximo com modelo sem preço também impede o envio. O avaliador ainda mantém seu orçamento global compartilhado. Os testes usam clientes falsos e bloqueiam chamadas reais. **A qualidade com modelo real continua sem medição.**
+
 ### Avaliação da extração com IA
 
 O [dataset rotulado](evals/llm/manifest.json) contém **36 propostas fictícias**, em 12 famílias de layout: 32 TXTs e 4 PDFs textuais. Inclui tabelas reordenadas, CSV, Markdown, narrativa, fichas, tabulação, rótulos em inglês, itens e descrições em várias linhas, ausências, BRL/USD/EUR, formatos brasileiro e americano, cabeçalhos/rodapés ruidosos, duplicatas, totais divergentes e quatro tentativas de injeção. Cada caso tem uma cesta e um gabarito compatível com `QuoteDraft`, com linhas de evidência. A [política de anotação](evals/llm/README.md) explica as limitações do contrato e como regenerar os documentos.
@@ -225,7 +233,7 @@ python -m evals.run_llm_eval \
   --budget-usd 3
 ```
 
-Os nomes acima são exemplos com preços documentados, sem confirmação de acesso nesta conta. Confira disponibilidade e preços antes de executar. Para outro modelo, forneça `--pricing caminho/precos.json`, seguindo o formato de [pricing.json](evals/llm/pricing.json): `models` mapeia cada nome para `input` e `output`, em dólares por milhão de tokens, com data e fontes. Os preços de referência vêm das páginas oficiais de [GPT-4.1 mini](https://developers.openai.com/api/docs/models/gpt-4.1-mini) e [GPT-4.1](https://developers.openai.com/api/docs/models/gpt-4.1), consultadas em 05/11/2026. O avaliador recusa modelos sem preços e orçamentos acima de US$ 3. Antes de cada chamada, reserva um limite conservador pela entrada em bytes e pelo teto de saída; não faz novas tentativas automáticas. Sem dados de uso retornados, mantém a reserva e interrompe os envios. Os custos são estimativas com preço integral de entrada, sem desconto de cache; a fatura do provedor é a referência final.
+Os nomes acima são exemplos com preços documentados, sem confirmação de acesso nesta conta. Confira disponibilidade e preços antes de executar. Para outro modelo, forneça `--pricing caminho/precos.json`, seguindo o formato de [llm_pricing.json](cotera/llm_pricing.json): `models` mapeia cada nome para `input` e `output`, em dólares por milhão de tokens, com data e fontes. Os preços de referência vêm das páginas oficiais de [GPT-4.1 mini](https://developers.openai.com/api/docs/models/gpt-4.1-mini) e [GPT-4.1](https://developers.openai.com/api/docs/models/gpt-4.1), consultadas em 05/11/2026. O avaliador recusa modelos sem preços e orçamentos acima de US$ 3. Antes de cada chamada, reserva um limite conservador pela entrada em bytes e pelo teto de saída, inclusive nos retries e no reparo único. Sem dados de uso retornados, mantém a reserva e interrompe os envios. Os custos são estimativas; a tabela incluída usa preço integral de entrada, sem tarifa específica de cache; a fatura do provedor é a referência final.
 
 Os relatórios incluem acurácia por campo (valores presentes e ausentes separados), precisão/recall de itens com duplicatas, exatidão de quantidade/preço, total após `audit_quote` com `Decimal`, elegibilidade, rejeições de evidência, falhas de esquema/Pydantic, resistência aos ataques, latências p50/p95, tokens e custo estimado por documento. O uso de tokens segue os campos retornados pela [Responses API](https://developers.openai.com/api/reference/python/resources/responses/methods/create), inclusive quando a validação posterior falha. Falhas de extração contam como erros; rejeitar um ataque é registrado separadamente de extrair corretamente a proposta.
 
@@ -275,7 +283,7 @@ O `.env` é lido pelo Docker Compose. Na execução Python nativa, as variáveis
 .\.venv\Scripts\python.exe -m cotera evaluate
 ```
 
-Na validação desta alteração, em **Python 3.13.5: 98 testes passaram e 1 foi pulado**, com Tesseract 5.5.0 e idiomas `por+eng`. O teste de PostgreSQL foi pulado por não haver servidor disponível; ele é habilitado por `COTERA_TEST_POSTGRES_URL`. O [workflow de CI](.github/workflows/tests.yml) mantém Python 3.12 e 3.14, configura um serviço PostgreSQL, instala Tesseract e executa a suíte e as avaliações locais, inclusive a baseline complementar de OCR, sem exigir chave de IA. As duas versões de Python da CI, PostgreSQL e n8n/Compose não foram executados nesta validação local.
+Na validação desta alteração, em **Python 3.12.16: 138 testes passaram e 1 foi pulado**, com Tesseract local e idiomas `por+eng`. Nenhuma chamada real à OpenAI foi feita; os testes de IA usam clientes falsos e bloqueiam o envio real. O teste de PostgreSQL foi pulado por não haver servidor disponível; ele é habilitado por `COTERA_TEST_POSTGRES_URL`. O [workflow de CI](.github/workflows/tests.yml) mantém Python 3.12 e 3.14, configura um serviço PostgreSQL, instala Tesseract e executa a suíte e as avaliações locais, inclusive a baseline complementar de OCR, sem exigir chave de IA. Python 3.14 do CI, PostgreSQL e n8n/Compose não foram executados nesta validação local.
 
 Os testes locais cobrem PDF/TXT, limites, números ambíguos, dados ausentes, evidências inválidas, arredondamento, deduplicação, transações, decisões concorrentes, exportação, API e os fluxos da interface. Também verificam a oferta de IA por chave em ambiente/segredos, o modo local inicial, o botão de exemplo, o fallback do SQLite e a ausência da chave nos dados persistidos/exportados.
 
@@ -310,14 +318,15 @@ O servidor também foi iniciado em Python 3.12 por pelo menos 15 segundos com `s
 | `pyproject.toml` / `requirements.txt` | Python mínimo, dependências e instalação no Cloud |
 | `cotera/documents.py` | PDF/TXT, parser local e verificação de evidências |
 | `cotera/ocr.py` | Renderização de páginas, Tesseract local e orçamento total de OCR |
-| `cotera/extraction.py` | Contrato e integração de extração com IA |
+| `cotera/extraction.py` | Esquema derivado de Pydantic, retries, reparo e validação com IA |
+| `cotera/errors.py` / `cotera/usage.py` / `cotera/llm_pricing.json` | Erros tipados, uso acumulado e preços datados para estimativas |
 | `cotera/comparison.py` | Cesta, cálculos e elegibilidade |
 | `cotera/service.py` | Fluxo de inclusão e deduplicação anterior ao provedor |
 | `cotera/store.py` | SQLite/PostgreSQL, transações e versões |
 | `cotera/api.py` | Integração HTTP |
 | `cotera/reports.py` | HTML, CSV e JSON |
 | `cotera/evaluation.py` | Casos de referência reproduzíveis |
-| `evals/llm/` | 36 propostas fictícias e dois casos OCR complementares, gabaritos, geradores e preços de referência |
+| `evals/llm/` | 36 propostas fictícias e dois casos OCR complementares, gabaritos e geradores |
 | `evals/run_llm_eval.py` | Avaliação do caminho real de IA e baseline local, com orçamento |
 | `evals/metrics.py` / `evals/budget.py` | Métricas, uso de tokens e controle de custo |
 | `reports/llm_evaluation.json` / `.md` | Estado da execução e resultados observados |

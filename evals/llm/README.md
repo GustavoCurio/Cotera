@@ -28,3 +28,11 @@ python -m evals.run_llm_eval --baseline-only \
 O relatório registra proveniência, confiança média por página e alerta de revisão humana. A elegibilidade continua medindo as regras da cesta e dos valores; a revisão do PDF original é exigida ao registrar uma decisão. A latência publicada mede a extração após a leitura, sem incluir renderização/OCR. Os dois casos tiveram extração aceita e total correto na baseline local registrada; isso não estima precisão em PDFs reais. Texto, confiança e até linhas podem variar conforme a versão do Tesseract e os dados de idioma. O teste end-to-end real é pulado quando Tesseract/idiomas não estão disponíveis.
 
 Este é um conjunto sintético de desenvolvimento, pequeno e sem separação entre treino e teste. Resultados nele não estimam desempenho em propostas reais nem garantem resistência geral a ataques.
+
+## Tentativas e custo por documento
+
+O avaliador executa o extrator de produção: até três tentativas por geração para falhas transitórias (`COTERA_LLM_MAX_ATTEMPTS`), uma única correção de JSON/Pydantic/evidência e nenhuma repetição para erros permanentes. O orçamento global reserva cada envio, inclusive novas tentativas e correção. Sem dados de uso, mantém a reserva e impede envios adicionais.
+
+O JSON registra `attempts`, `repair_used`, `usage` (entrada, saída, cache e raciocínio), `usage_complete`, `elapsed_ms`, `estimated_cost_usd`, `cost_is_estimate`, `pricing_date` e `error_code`. Tokens conhecidos são somados mesmo em extrações rejeitadas; consumo incompleto mantém custo desconhecido. Cache e raciocínio já pertencem aos totais de entrada e saída. O resumo Markdown também mostra tentativas e correções.
+
+A tabela padrão fica em [cotera/llm_pricing.json](../../cotera/llm_pricing.json), com data, fontes e preços em USD por milhão; `--pricing` aceita outra tabela e `cached_input` é opcional. O aplicativo/API também aceita `COTERA_LLM_PRICING_PATH`. A estimativa não substitui a fatura. Os testes com clientes falsos verificam esse caminho e continuam marcados como simulação; a qualidade de modelos reais ainda não foi medida.
