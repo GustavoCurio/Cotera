@@ -22,4 +22,59 @@ include-package-data = false
 dependencies = {file = ["requirements.txt"]}
 
 [dependency-groups]
-dev = ["pytest==9.2.0", "httpx==0.28.1", "reportlab==4.5.1"]
+dev = [
+    "pytest==9.2.0",
+    "pytest-cov>=7,<8",
+    "ruff>=0.14,<1",
+    "mypy>=1.18,<2",
+    "httpx==0.28.1",
+    "reportlab==4.5.1",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
+addopts = "-ra --strict-markers"
+markers = [
+    "postgres: integração com PostgreSQL configurado por COTERA_TEST_POSTGRES_URL",
+    "ocr: integração com Tesseract e idiomas por+eng",
+    "slow: fluxos de interface, geração de documentos ou OCR real",
+]
+
+[tool.ruff]
+target-version = "py312"
+line-length = 120
+extend-exclude = ["OUT"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP", "SIM", "RUF"]
+ignore = [
+    "E501",  # O formatador quebra código; mensagens e dados documentais preservam o texto.
+    "RUF001", "RUF002", "RUF003",  # Pontuação e caracteres dos exemplos em português.
+]
+
+[tool.ruff.lint.per-file-ignores]
+"cotera/api.py" = ["B008"]  # FastAPI declara parâmetros por Header, File e Form.
+
+[tool.mypy]
+files = ["cotera"]
+python_version = "3.12"
+check_untyped_defs = true
+disallow_untyped_defs = true
+no_implicit_optional = true
+warn_redundant_casts = true
+warn_unused_ignores = true
+show_error_codes = true
+
+[[tool.mypy.overrides]]
+module = ["pytesseract.*", "pypdfium2.*"]
+ignore_missing_imports = true
+
+[tool.coverage.run]
+source = ["cotera"]
+branch = true
+
+[tool.coverage.report]
+show_missing = true
+precision = 2
+
