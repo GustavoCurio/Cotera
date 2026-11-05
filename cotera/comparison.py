@@ -1,6 +1,7 @@
 """Cálculos determinísticos para propostas da mesma cesta; IA não escolhe fornecedor."""
 from decimal import Decimal, ROUND_HALF_UP
 from .models import PurchaseRequest, QuoteDraft
+from .documents import Document
 
 
 def money(value: Decimal) -> Decimal:
@@ -8,7 +9,7 @@ def money(value: Decimal) -> Decimal:
     return value.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
 
 
-def audit_quote(request: PurchaseRequest, quote: QuoteDraft) -> dict:
+def audit_quote(request: PurchaseRequest, quote: QuoteDraft, document: Document | dict | None = None) -> dict:
     """Avalia completude, cesta, unidade, quantidade, prazo e reconciliação do total.
 
     eligible=True exige que todas as verificações passem. Itens não são
@@ -51,13 +52,18 @@ def audit_quote(request: PurchaseRequest, quote: QuoteDraft) -> dict:
         issues.append(f"Total declarado diverge: calculado {computed}; documento {quote.reported_total}.")
     if request.max_delivery_days is not None and quote.delivery_days is not None and quote.delivery_days > request.max_delivery_days:
         issues.append(f"Prazo excede o limite de {request.max_delivery_days} dias.")
-    return {"eligible": not issues, "issues": sorted(set(issues)), "items": rows,
+    provenance = document.to_dict() if isinstance(document, Document) else (document or {})
+    requires_review = any(page["method"] == "ocr" and page.get("start_line") is not None
+                          for page in provenance.get("pages", []))
+    warnings = ["Texto obtido por OCR: revisão humana dos valores no PDF original obrigatória antes da escolha."] if requires_review else []
+    return {"eligible": not issues, "issues": sorted(set(issues)), "warnings": warnings,
+            "requires_human_review": requires_review, "items": rows,
             "subtotal": str(money(subtotal)), "computed_total": str(computed) if computed is not None else None}
 
 
 def compare(request: PurchaseRequest, proposals: list[dict]) -> dict:
     """Ordena elegíveis por custo; empates mantêm todos os fornecedores de menor custo."""
-    rows = [{**p, "audit": audit_quote(request, QuoteDraft.model_validate(p["draft"]))} for p in proposals]
+    rows = [{**p, "audit": audit_quote(request, QuoteDraft.model_validate(p["draft"]), p.get("document"))} for p in proposals]
     valid = sorted((row for row in rows if row["audit"]["eligible"]), key=lambda p: (Decimal(p["audit"]["computed_total"]), p["id"]))
     best = Decimal(valid[0]["audit"]["computed_total"]) if valid else None
     return {"proposals": rows, "eligible_count": len(valid),

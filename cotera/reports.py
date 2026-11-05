@@ -22,10 +22,11 @@ def comparison_csv(snapshot):
     """Exporta uma linha por proposta; neutraliza fórmulas em textos de planilha."""
     output = StringIO(newline="")
     writer = csv.writer(output, delimiter=";")
-    writer.writerow(["Fornecedor", "Referência", "Moeda", "Elegível", "Total calculado", "Prazo dias", "Pendências"])
+    writer.writerow(["Fornecedor", "Referência", "Moeda", "Elegível", "Total calculado", "Prazo dias", "Pendências", "Alertas"])
     for p in snapshot["proposals"]:
         row = [p["draft"]["supplier"] or "", p["draft"]["reference"] or "", p["draft"]["currency"] or "", "Sim" if p["audit"]["eligible"] else "Não",
-               p["audit"]["computed_total"] or "", p["draft"]["delivery_days"], " | ".join(p["audit"]["issues"])]
+               p["audit"]["computed_total"] or "", p["draft"]["delivery_days"], " | ".join(p["audit"]["issues"]),
+               " | ".join(p["audit"].get("warnings", []))]
         writer.writerow(["'" + str(v) if str(v).lstrip().startswith(("=", "+", "-", "@")) or str(v).startswith(("\t", "\r", "\n")) else v for v in row])
     return output.getvalue().encode("utf-8-sig")
 
@@ -36,6 +37,8 @@ def report_html(snapshot):
     for p in snapshot["proposals"]:
         q, audit = p["draft"], p["audit"]
         issues = "<br>".join(escape(message) for message in audit["issues"]) or "Todos os critérios atendidos."
+        for message in audit.get("warnings", []):
+            issues += "<br><strong>" + escape(message) + "</strong>"
         amount = brl(audit['computed_total']) if q['currency'] == 'BRL' else 'Moeda incompatível ou ausente'
         cards.append(f"<tr><td>{escape(q['supplier'] or 'Não informado')}</td><td>{escape(q['reference'] or '—')}</td><td>{escape(amount)}</td><td>{escape(str(q['delivery_days']))}</td><td>{'Elegível' if audit['eligible'] else 'Pendente'}<br>{issues}</td></tr>")
     history = "".join(f"<li><strong>{escape(d['supplier'])}</strong> · {escape(brl(d['total']))}<br>{escape(d['reason'])}<br><small>{escape(d['actor'])} · {escape(d['created_at'])} · versão {d['version']}</small></li>" for d in snapshot["decisions"])

@@ -74,3 +74,4 @@ class Decision(Contract):
     expected_version: int = Field(ge=1)
     actor: str = Field(min_length=2, max_length=80)
     reason: str = Field(min_length=15, max_length=1500)
+    ocr_reviewed: bool = False

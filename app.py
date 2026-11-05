@@ -43,6 +43,22 @@ def load_example():
     st.session_state["cotera_view"] = "Comparar"
 
 
+def load_scanned_example():
+    """Abre o exemplo só-imagem no espaço de demonstração, sempre com parser local."""
+    load_example()
+    st.session_state["cotera_scanned_example"] = True
+    st.session_state["cotera_view"] = "Documentos"
+
+
+def show_ocr_notice(proposal):
+    """Apresenta confiança por página sem tratá-la como garantia dos valores."""
+    for page in proposal["document"].get("pages", []):
+        if page["method"] == "ocr":
+            confidence = page["ocr_confidence"]
+            label = f"{confidence:.1f}%" if confidence is not None else "indisponível"
+            st.warning(f"Texto obtido por OCR · página {page['page']} · confiança média {label}. Revise os valores no PDF original.")
+
+
 def server_setting(name):
     """Lê a configuração do ambiente ou dos segredos opcionais do Streamlit."""
     if value := os.environ.get(name):
@@ -57,6 +73,7 @@ head, controls, example, action = st.columns([2.5, 1.3, 1, 1])
 head.markdown('<div class="brand"><b>◒</b>Cotera<small>MESA DE COMPRAS</small></div>', unsafe_allow_html=True)
 space = controls.selectbox("Espaço", ["Demonstração", "Minhas cotações"], key="cotera_space", label_visibility="collapsed", on_change=change_space)
 example.button("Carregar exemplo", on_click=load_example, width="stretch")
+example.button("Carregar exemplo escaneado", on_click=load_scanned_example, width="stretch")
 if action.button("＋ Nova cotação", disabled=space == "Demonstração", width="stretch"):
     st.session_state["cotera_new"] = True
 st.divider()
@@ -65,12 +82,21 @@ try:
         demo_home = os.environ.get("COTERA_DEMO_HOME")
         demo_url = "sqlite:///" + str(Path(demo_home) / "demo.sqlite3") if demo_home else default_sqlite_url("demo.sqlite3")
         store = Store(demo_url)
-        seed_demo(store)
+        demo_identifier = seed_demo(store)
     else:
         store = Store()
 except Exception:
     st.error("Não foi possível abrir o armazenamento. Confira a configuração do banco no servidor.")
     st.stop()
+
+if st.session_state.pop("cotera_scanned_example", False):
+    try:
+        path = DATA / "scanned" / "aurora_escaneada.pdf"
+        with st.spinner("Lendo o exemplo escaneado com OCR local…"):
+            add_document(store, demo_identifier, path.read_bytes(), path.name)
+        st.session_state["cotera_purchase"] = demo_identifier
+    except (ValueError, OSError) as error:
+        st.error(str(error))
 
 if st.session_state.get("cotera_flash"):
     st.success(st.session_state.pop("cotera_flash"))
@@ -154,6 +180,7 @@ if view == "Comparar":
                         st.markdown(f'<div class="quote {"best" if best else "pending" if not audit["eligible"] else ""}"><span class="pill {"pending" if not audit["eligible"] else ""}">{label}</span><div class="supplier">{escape(q["supplier"] or "Fornecedor não informado")}</div><div class="price">{escape(amount)}</div><div class="fine">{escape(q["reference"] or "Sem referência")} · {q["delivery_days"] if q["delivery_days"] is not None else "?"} dias</div><div class="fine">Frete {escape(brl(q["freight"]))} · desconto {escape(brl(q["discount"]))}</div></div>', unsafe_allow_html=True)
                         for message in audit["issues"]:
                             st.caption("↳ " + message)
+                        show_ocr_notice(p)
             st.markdown("#### O que compõe cada proposta")
             matrix = []
             for item in request.items:
@@ -177,13 +204,16 @@ if view == "Comparar":
             visible_key = "visible_version_" + identifier
             visible_version = st.session_state.get(visible_key, snapshot["version"])
             with st.form("decision_" + identifier):
-                selected = st.selectbox("Proposta escolhida", [p["id"] for p in valid], format_func=lambda key: next(p["draft"]["supplier"] + " · " + brl(p["audit"]["computed_total"]) for p in valid if p["id"] == key))
+                selected = st.selectbox("Proposta escolhida", [p["id"] for p in valid], format_func=lambda key: next(p["draft"]["supplier"] + " · " + brl(p["audit"]["computed_total"]) + (" · OCR" if p["audit"]["requires_human_review"] else "") for p in valid if p["id"] == key))
                 actor = st.text_input("Responsável pela escolha", max_chars=80)
                 reason = st.text_area("Justificativa", placeholder="Ex.: O prazo atende à necessidade e compensa a diferença de preço.", max_chars=1500)
+                ocr_reviewed = False
+                if any(p["audit"]["requires_human_review"] for p in valid):
+                    ocr_reviewed = st.checkbox("Revisei no PDF original os valores da proposta obtidos por OCR", help="Obrigatório apenas quando a proposta escolhida usa OCR.")
                 st.caption("O registro documenta sua escolha. Não envia pedidos nem realiza pagamentos.")
                 if st.form_submit_button("Registrar decisão", type="primary"):
                     try:
-                        store.decide(identifier, Decision(proposal_id=selected, expected_version=visible_version, actor=actor, reason=reason))
+                        store.decide(identifier, Decision(proposal_id=selected, expected_version=visible_version, actor=actor, reason=reason, ocr_reviewed=ocr_reviewed))
                         st.session_state["cotera_flash"] = "Decisão registrada com a proposta, o valor e sua justificativa."
                         st.rerun()
                     except ValidationError:
@@ -202,7 +232,7 @@ elif view == "Documentos":
         captions = ["Lê os campos do modelo fornecido, sem LLM."]
         if api_key:
             modes.append("Extração com IA")
-            captions.append("Extrai de outros layouts com texto selecionável.")
+            captions.append("Extrai de outros layouts a partir de texto ou OCR.")
         mode_label = st.radio("Leitura do documento", modes, index=0, captions=captions)
         mode = "ai" if mode_label == "Extração com IA" else "local"
         consent = False
@@ -213,7 +243,7 @@ elif view == "Documentos":
             consent = st.checkbox("Autorizo o envio do texto para extração com IA")
             if not model:
                 st.info("Informe o modelo ou configure OPENAI_MODEL nos segredos ou no ambiente do servidor.")
-        file = st.file_uploader("Proposta do fornecedor", type=["pdf", "txt"], help="Até 2 MB, cinco páginas e 25 mil caracteres. PDF precisa ter texto selecionável.")
+        file = st.file_uploader("Proposta do fornecedor", type=["pdf", "txt"], help="Até 2 MiB, cinco páginas e 25 mil caracteres. PDF escaneado usa OCR local e exige revisão humana.")
         if st.button("Extrair e adicionar", type="primary", disabled=file is None or (mode == "ai" and (not api_key or not model or not consent))):
             try:
                 with st.spinner("Lendo e conferindo a proposta…"):
@@ -228,6 +258,7 @@ elif view == "Documentos":
         st.caption("Use os códigos e quantidades da sua cesta no documento. Unidade, frete, desconto, moeda e prazo precisam estar explícitos.")
         st.download_button("Baixar modelo editável · TXT", (DATA / "proposals" / "aurora.txt").read_bytes(), "cotera-modelo.txt", "text/plain")
         st.download_button("Baixar exemplo · PDF", (DATA / "proposals" / "aurora.pdf").read_bytes(), "cotera-exemplo.pdf", "application/pdf")
+        st.download_button("Baixar exemplo escaneado · PDF", (DATA / "scanned" / "aurora_escaneada.pdf").read_bytes(), "cotera-exemplo-escaneado.pdf", "application/pdf")
     with evidence:
         st.markdown("#### Conferir a origem")
         proposals = snapshot["proposals"]
@@ -237,6 +268,7 @@ elif view == "Documentos":
             chosen = st.selectbox("Documento em conferência", [p["id"] for p in proposals], format_func=lambda i: next((p["draft"]["supplier"] or "Sem fornecedor") + " · " + p["document"]["filename"] for p in proposals if p["id"] == i))
             p = next(p for p in proposals if p["id"] == chosen)
             st.caption(f"Leitura {'com IA' if p['extraction']['mode'] == 'ai' else 'do modelo local'} · {p['extraction']['elapsed_ms']} ms · {p['document']['filename']}")
+            show_ocr_notice(p)
             labels = {"supplier": "Fornecedor", "reference": "Referência", "currency": "Moeda", "delivery_days": "Prazo · dias", "freight": "Frete", "discount": "Desconto", "reported_total": "Total declarado"}
             st.dataframe([{"Campo": label, "Valor extraído": str(p["draft"][field]) if p["draft"][field] is not None else "Não informado", "Linha": p["draft"]["evidence"][field]} for field, label in labels.items()], hide_index=True, width="stretch")
             st.markdown("**Texto do documento, com linhas numeradas**")

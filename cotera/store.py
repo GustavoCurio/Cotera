@@ -149,6 +149,8 @@ class Store:
             raise ValueError("Escolha uma proposta elegível desta cotação.")
         if snapshot["version"] != decision.expected_version:
             raise ConflictError("A cotação mudou. Atualize a comparação antes de registrar a escolha.")
+        if selected["audit"]["requires_human_review"] and not decision.ocr_reviewed:
+            raise ValueError("Texto obtido por OCR: confirme a revisão humana dos valores no PDF original antes de registrar a escolha.")
         payload = {**decision.model_dump(exclude={"expected_version"}), "version": decision.expected_version + 1,
                    "supplier": selected["draft"]["supplier"], "total": selected["audit"]["computed_total"], "currency": "BRL"}
         identifier_decision, created = uuid4().hex, now()

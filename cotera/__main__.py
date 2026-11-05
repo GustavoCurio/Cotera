@@ -33,8 +33,10 @@ def main():
         from .documents import MAX_BYTES
         with args.file.open("rb") as source:
             content = source.read(MAX_BYTES + 1)
-        draft, _ = extract(read_document(content, args.file.name), demo_request())
-        print(json.dumps({"draft": draft.model_dump(mode="json"), "audit": audit_quote(demo_request(), draft)}, ensure_ascii=False, indent=2))
+        document = read_document(content, args.file.name)
+        draft, _ = extract(document, demo_request())
+        print(json.dumps({"document": document.to_dict(), "draft": draft.model_dump(mode="json"),
+                          "audit": audit_quote(demo_request(), draft, document)}, ensure_ascii=False, indent=2))
 
 
 if __name__ == "__main__":
