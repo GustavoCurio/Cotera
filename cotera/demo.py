@@ -1,5 +1,6 @@
 """Cesta e propostas de fornecedores fictícios para explorar o Cotera."""
 from pathlib import Path
+from hashlib import sha256
 from .documents import read_document
 from .extraction import extract
 from .models import PurchaseRequest
@@ -17,13 +18,20 @@ def demo_request():
     ])
 
 
-def seed_demo(store):
+def seed_demo(store, *, scanned=False):
     """Cria a demonstração uma vez; reenvios dos PDFs são deduplicados pelo hash."""
     request = demo_request()
-    existing = next((row for row in store.list() if row["title"] == DEMO_TITLE), None)
+    if scanned:
+        request.title = DEMO_TITLE + " escaneada"
+    existing = next((row for row in store.list() if row["title"] == request.title), None)
     identifier = existing["id"] if existing else store.create(request)["id"]
-    for path in sorted((DATA / "proposals").glob("*.pdf")):
-        document = read_document(path.read_bytes(), path.name)
+    hashes = {p["document"]["sha256"] for p in store.get(identifier)["proposals"]}
+    for original in sorted((DATA / "proposals").glob("*.pdf")):
+        path = DATA / "scanned" / "aurora_escaneada.pdf" if scanned and original.stem == "aurora" else original
+        content = path.read_bytes()
+        if sha256(content).hexdigest() in hashes:
+            continue
+        document = read_document(content, path.name)
         draft, metadata = extract(document, request)
         store.add_proposal(identifier, document, draft, metadata)
     return identifier

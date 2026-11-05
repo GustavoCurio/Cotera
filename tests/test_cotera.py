@@ -346,6 +346,39 @@ def test_streamlit_create_own_request(tmp_path, monkeypatch):
     assert len(own) == 1 and own[0]["items"][0]["sku"] == "TESTE-01"
 
 
+@pytest.mark.parametrize("scanned", [False, True])
+def test_example_buttons_give_feedback_and_do_not_duplicate(tmp_path, monkeypatch, scanned):
+    monkeypatch.setenv("COTERA_DEMO_HOME", str(tmp_path))
+    calls = []
+
+    def fake_ocr(content, indexes):
+        calls.append(indexes)
+        return {0: ((DATA / "proposals/aurora.txt").read_text(), 95.0)}
+
+    monkeypatch.setattr("cotera.documents.read_scanned_pages", fake_ocr)
+    ui = AppTest.from_file(str(ROOT / "app.py"), default_timeout=60).run()
+    ui.segmented_control[0].set_value("Documentos").run()
+    label = "Carregar exemplo escaneado" if scanned else "Carregar exemplo"
+    snapshots = []
+    for _ in range(2):
+        next(b for b in ui.button if b.label == label).click().run()
+        assert not ui.exception
+        assert any("Aurora Suprimentos" in s.value and "Comparar" in s.value for s in ui.success)
+        snapshots.append(Store("sqlite:///" + str(tmp_path / "demo.sqlite3")).get(ui.selectbox(key="cotera_purchase").value))
+    first, second = snapshots
+    assert first["id"] == second["id"] and first["version"] == second["version"]
+    assert len(second["proposals"]) == 3
+    assert sum(p["draft"]["supplier"] == "Aurora Suprimentos" for p in second["proposals"]) == 1
+    assert sum(p["audit"]["requires_human_review"] for p in second["proposals"]) == int(scanned)
+    assert len(calls) == int(scanned)  # Reenvio não repete nem o OCR.
+    if scanned:
+        next(b for b in ui.button if b.label == "Carregar exemplo").click().run()
+        assert not ui.exception and ui.segmented_control[0].value == "Comparar"
+        regular = Store("sqlite:///" + str(tmp_path / "demo.sqlite3")).get(ui.selectbox(key="cotera_purchase").value)
+        assert len(regular["proposals"]) == 3
+        assert not any(p["audit"]["requires_human_review"] for p in regular["proposals"])
+
+
 @pytest.mark.parametrize("source", ["env", "secrets"])
 @pytest.mark.parametrize("configured_model", [False, True])
 def test_streamlit_ai_requires_key_and_defaults_to_local(tmp_path, monkeypatch, source, configured_model):

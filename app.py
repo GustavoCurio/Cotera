@@ -41,12 +41,15 @@ def load_example():
     change_space()
     st.session_state["cotera_space"] = "Demonstração"
     st.session_state["cotera_view"] = "Comparar"
+    st.session_state["cotera_demo_scanned"] = False
+    st.session_state["cotera_flash"] = "Exemplo carregado: Aurora Suprimentos, Prumo Distribuidora e Vértice Comercial. Confira as propostas na aba Comparar."
 
 
 def load_scanned_example():
     """Abre o exemplo só-imagem no espaço de demonstração, sempre com parser local."""
     load_example()
-    st.session_state["cotera_scanned_example"] = True
+    st.session_state["cotera_demo_scanned"] = True
+    st.session_state["cotera_flash"] = "Exemplo escaneado carregado: Aurora Suprimentos, com OCR local. Confira as propostas na aba Comparar e revise os valores no PDF original."
     st.session_state["cotera_view"] = "Documentos"
 
 
@@ -82,21 +85,15 @@ try:
         demo_home = os.environ.get("COTERA_DEMO_HOME")
         demo_url = "sqlite:///" + str(Path(demo_home) / "demo.sqlite3") if demo_home else default_sqlite_url("demo.sqlite3")
         store = Store(demo_url)
-        demo_identifier = seed_demo(store)
+        with st.spinner("Carregando as propostas de demonstração…"):
+            demo_identifier = seed_demo(store, scanned=st.session_state.get("cotera_demo_scanned", False))
+        if "cotera_purchase" not in st.session_state:
+            st.session_state["cotera_purchase"] = demo_identifier
     else:
         store = Store()
 except Exception:
     st.error("Não foi possível abrir o armazenamento. Confira a configuração do banco no servidor.")
     st.stop()
-
-if st.session_state.pop("cotera_scanned_example", False):
-    try:
-        path = DATA / "scanned" / "aurora_escaneada.pdf"
-        with st.spinner("Lendo o exemplo escaneado com OCR local…"):
-            add_document(store, demo_identifier, path.read_bytes(), path.name)
-        st.session_state["cotera_purchase"] = demo_identifier
-    except (ValueError, OSError) as error:
-        st.error(str(error))
 
 if st.session_state.get("cotera_flash"):
     st.success(st.session_state.pop("cotera_flash"))
