@@ -1,1 +1,3 @@
 evals/llm/documents/*.pdf binary
+evals/llm/scanned/*.pdf binary
+data/scanned/*.pdf binary
