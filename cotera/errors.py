@@ -1,5 +1,7 @@
 """Falhas de extração com códigos estáveis e mensagens públicas sem dados do provedor."""
 
+from typing import Any
+
 
 class ProviderError(RuntimeError):
     """Base compatível para falhas esperadas da extração externa."""
@@ -7,9 +9,9 @@ class ProviderError(RuntimeError):
     code = "provider_error"
     message = "Não foi possível extrair com IA. Tente novamente ou use o modelo local."
 
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__(self.message)
-        self.metadata = {}
+        self.metadata: dict[str, Any] = {}
 
 
 class TransientProviderError(ProviderError):

@@ -27,7 +27,7 @@ def read_scanned_pages(content: bytes, indexes: list[int]) -> dict[int, tuple[st
         raise ValueError("COTERA_OCR_TIMEOUT_SECONDS precisa ser um número positivo finito.") from error
     deadline = monotonic() + seconds
 
-    def remaining():
+    def remaining() -> float:
         value = deadline - monotonic()
         if value <= 0:
             raise TimeoutError
@@ -66,7 +66,8 @@ def read_scanned_pages(content: bytes, indexes: list[int]) -> dict[int, tuple[st
                             timeout=remaining(),
                         )
                 remaining()
-                lines, confidences = {}, []
+                lines: dict[tuple[str, str, str], list[str]] = {}
+                confidences: list[float] = []
                 for row in csv.DictReader(StringIO(tsv), delimiter="\t", quoting=csv.QUOTE_NONE):
                     word = row["text"].strip()
                     if row["level"] != "5" or not word:

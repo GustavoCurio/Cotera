@@ -1,13 +1,25 @@
 """Fluxo compartilhado pela interface e API, com deduplicação antes da chamada externa."""
 
+from typing import Any
+
 from .documents import read_document
-from .extraction import extract
+from .extraction import ExtractionClient, extract
 from .models import PurchaseRequest
+from .store import Store
 
 
 def add_document(
-    store, identifier, content, filename, mode="local", *, consent=False, client=None, model=None, api_key=None
-):
+    store: Store,
+    identifier: str,
+    content: bytes,
+    filename: str,
+    mode: str = "local",
+    *,
+    consent: bool = False,
+    client: ExtractionClient | None = None,
+    model: str | None = None,
+    api_key: str | None = None,
+) -> dict[str, Any]:
     """Lê, extrai e registra uma proposta sem repetir processamento de bytes já recebidos.
 
     A autorização de IA é verificada mesmo em reenvios. A inserção transacional

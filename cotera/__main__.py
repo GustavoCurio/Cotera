@@ -12,7 +12,7 @@ from .extraction import extract
 from .store import Store
 
 
-def main():
+def main() -> None:
     """Executa subcomandos locais; extract não chama IA nem altera o banco."""
     parser = argparse.ArgumentParser(description="Cotera · comparação rastreável de orçamentos")
     commands = parser.add_subparsers(dest="command", required=True)

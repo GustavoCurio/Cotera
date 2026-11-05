@@ -1,6 +1,7 @@
 """Cálculos determinísticos para propostas da mesma cesta; IA não escolhe fornecedor."""
 
 from decimal import ROUND_HALF_UP, Decimal
+from typing import Any
 
 from .documents import Document
 from .models import PurchaseRequest, QuoteDraft
@@ -11,7 +12,9 @@ def money(value: Decimal) -> Decimal:
     return value.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
 
 
-def audit_quote(request: PurchaseRequest, quote: QuoteDraft, document: Document | dict | None = None) -> dict:
+def audit_quote(
+    request: PurchaseRequest, quote: QuoteDraft, document: Document | dict[str, Any] | None = None
+) -> dict[str, Any]:
     """Avalia completude, cesta, unidade, quantidade, prazo e reconciliação do total.
 
     eligible=True exige que todas as verificações passem. Itens não são
@@ -41,7 +44,7 @@ def audit_quote(request: PurchaseRequest, quote: QuoteDraft, document: Document 
         if item.sku in seen:
             issues.append(f"Item repetido: {item.sku}.")
         seen.add(item.sku)
-        target = expected.get(item.sku)
+        target = expected.get(item.sku) if item.sku is not None else None
         if target is None:
             issues.append(f"Item fora da cesta: {item.sku or 'sem código'}.")
         elif item.quantity != target.quantity or item.unit != target.unit:
@@ -103,7 +106,7 @@ def audit_quote(request: PurchaseRequest, quote: QuoteDraft, document: Document 
     }
 
 
-def compare(request: PurchaseRequest, proposals: list[dict]) -> dict:
+def compare(request: PurchaseRequest, proposals: list[dict[str, Any]]) -> dict[str, Any]:
     """Ordena elegíveis por custo; empates mantêm todos os fornecedores de menor custo."""
     rows = [
         {**p, "audit": audit_quote(request, QuoteDraft.model_validate(p["draft"]), p.get("document"))}

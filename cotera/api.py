@@ -3,7 +3,7 @@
 import hmac
 import os
 from functools import lru_cache
-from typing import Literal
+from typing import Any, Literal
 
 from fastapi import Depends, FastAPI, File, Form, Header, HTTPException, UploadFile
 from fastapi.responses import HTMLResponse
@@ -17,7 +17,7 @@ from .service import add_document
 from .store import ConflictError, Store
 
 
-def authorize(x_cotera_key: str = Header(default="")):
+def authorize(x_cotera_key: str = Header(default="")) -> None:
     """Exige X-Cotera-Key quando COTERA_API_KEY está configurada no servidor."""
     expected = os.environ.get("COTERA_API_KEY", "")
     if expected and not hmac.compare_digest(x_cotera_key.encode(), expected.encode()):
@@ -33,31 +33,31 @@ app = FastAPI(
 
 
 @lru_cache(maxsize=1)
-def store():
+def store() -> Store:
     """Inicializa o armazenamento configurado no primeiro acesso da API."""
     return Store()
 
 
-@app.get("/health")
-def health():
+@app.get("/health", response_model=None)
+def health() -> dict[str, str]:
     """Indica disponibilidade sem abrir banco ou chamar o provedor de IA."""
     return {"status": "ok", "version": "1.0.0"}
 
 
-@app.get("/requests")
-def list_requests():
+@app.get("/requests", response_model=None)
+def list_requests() -> list[dict[str, Any]]:
     """Lista cestas persistidas no ambiente configurado."""
     return store().list()
 
 
-@app.post("/requests", status_code=201)
-def create_request(body: PurchaseRequest):
+@app.post("/requests", status_code=201, response_model=None)
+def create_request(body: PurchaseRequest) -> dict[str, Any]:
     """Cria uma cesta após validar códigos, unidades e quantidades."""
     return store().create(body)
 
 
-@app.get("/requests/{identifier}")
-def get_request(identifier: str):
+@app.get("/requests/{identifier}", response_model=None)
+def get_request(identifier: str) -> dict[str, Any]:
     """Devolve comparação recalculada, documentos e decisões; 404 para cesta ausente."""
     try:
         return store().get(identifier)
@@ -65,13 +65,13 @@ def get_request(identifier: str):
         raise HTTPException(404, "Cotação não encontrada.") from error
 
 
-@app.post("/requests/{identifier}/proposals")
+@app.post("/requests/{identifier}/proposals", response_model=None)
 async def add_proposal(
     identifier: str,
     file: UploadFile = File(...),
     mode: Literal["local", "ai"] = Form("local"),
     approve_external_processing: bool = Form(False),
-):
+) -> dict[str, Any]:
     """Recebe PDF/TXT, extrai, verifica origem e persiste; reenvio não duplica proposta.
 
     Retorna 403 sem consentimento de IA, 422 para documento inválido e 502 para
@@ -100,8 +100,8 @@ async def add_proposal(
         await file.close()
 
 
-@app.post("/requests/{identifier}/decisions", status_code=201)
-def decide(identifier: str, body: Decision):
+@app.post("/requests/{identifier}/decisions", status_code=201, response_model=None)
+def decide(identifier: str, body: Decision) -> dict[str, Any]:
     """Registra a escolha humana; 409 se o conjunto comparado mudou."""
     try:
         return store().decide(identifier, body)
@@ -114,6 +114,6 @@ def decide(identifier: str, body: Decision):
 
 
 @app.get("/requests/{identifier}/report", response_class=HTMLResponse)
-def report(identifier: str):
+def report(identifier: str) -> HTMLResponse:
     """Exporta relatório HTML com valores escapados e histórico de escolhas."""
     return HTMLResponse(report_html(get_request(identifier)).decode("utf-8"))

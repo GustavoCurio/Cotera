@@ -1,13 +1,14 @@
 """Avaliação reproduzível do parser local e das regras, em conjunto sintético explícito."""
 
 import json
+from typing import Any
 
 from .comparison import audit_quote
 from .demo import DATA, demo_request
 from .documents import extract_template, read_document
 
 
-def evaluate():
+def evaluate() -> dict[str, Any]:
     """Compara elegibilidade e total calculado com oito expectativas fixas; não mede LLM."""
     cases = json.loads((DATA.parent / "evals" / "cases.json").read_text("utf-8"))
     results = []

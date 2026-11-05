@@ -5,21 +5,22 @@ import json
 from decimal import Decimal
 from html import escape
 from io import StringIO
+from typing import Any
 
 
-def brl(value):
+def brl(value: str | Decimal | int | float | None) -> str:
     """Formata centavos em reais; None permanece como informação ausente."""
     if value is None:
         return "Não informado"
     return "R$ " + f"{Decimal(value):,.2f}".replace(",", "_").replace(".", ",").replace("_", ".")
 
 
-def snapshot_json(snapshot):
+def snapshot_json(snapshot: dict[str, Any]) -> bytes:
     """Exporta a fotografia completa, incluindo linhas de origem e decisões."""
     return json.dumps(snapshot, ensure_ascii=False, indent=2).encode("utf-8")
 
 
-def comparison_csv(snapshot):
+def comparison_csv(snapshot: dict[str, Any]) -> bytes:
     """Exporta uma linha por proposta; neutraliza fórmulas em textos de planilha."""
     output = StringIO(newline="")
     writer = csv.writer(output, delimiter=";")
@@ -48,7 +49,7 @@ def comparison_csv(snapshot):
     return output.getvalue().encode("utf-8-sig")
 
 
-def report_html(snapshot):
+def report_html(snapshot: dict[str, Any]) -> bytes:
     """Gera HTML independente com valores escapados e histórico da escolha humana."""
     cards = []
     for p in snapshot["proposals"]:

@@ -4,14 +4,24 @@ import json
 import os
 import sqlite3
 import tempfile
+from collections.abc import Iterator, Sequence
 from contextlib import contextmanager
 from datetime import UTC, datetime
 from pathlib import Path
+from typing import TYPE_CHECKING, Any, cast
 from uuid import uuid4
 
 from .comparison import compare
 from .documents import Document, verify_evidence
 from .models import Decision, PurchaseRequest, QuoteDraft
+
+if TYPE_CHECKING:
+    import psycopg
+
+# Tipos avaliados sob demanda; a importação do driver continua restrita ao PostgreSQL.
+type DBConnection = sqlite3.Connection | psycopg.Connection[dict[str, Any]]
+type DBCursor = sqlite3.Cursor | psycopg.Cursor[dict[str, Any]]
+
 
 ROOT = Path(__file__).resolve().parents[1]
 SCHEMA = [
@@ -25,15 +35,15 @@ class ConflictError(RuntimeError):
     """O conjunto comparado mudou entre a abertura da tela e a decisão."""
 
 
-def now():
+def now() -> str:
     """Data UTC com fuso explícito para histórico e exportação."""
     return datetime.now(UTC).isoformat()
 
 
-def default_sqlite_url(filename="cotera.sqlite3"):
+def default_sqlite_url(filename: str = "cotera.sqlite3") -> str:
     """Usa storage quando gravável; em hospedagem efêmera, recorre ao diretório temporário."""
 
-    def prepare(directory):
+    def prepare(directory: Path) -> str:
         directory.mkdir(parents=True, exist_ok=True)
         # SQLite também precisa criar arquivos de journal ao lado do banco.
         with tempfile.TemporaryFile(dir=directory):
@@ -52,7 +62,7 @@ def default_sqlite_url(filename="cotera.sqlite3"):
 class Store:
     """Abre conexões por operação; todos os valores entram no SQL por parâmetros."""
 
-    def __init__(self, url=None):
+    def __init__(self, url: str | None = None) -> None:
         """Aceita sqlite:///caminho ou postgresql://; padrão é storage/cotera.sqlite3."""
         self.url = url or os.environ.get("COTERA_DATABASE_URL") or default_sqlite_url()
         self.postgres = self.url.startswith(("postgresql://", "postgres://"))
@@ -66,13 +76,16 @@ class Store:
                 self.execute(connection, sql)
 
     @contextmanager
-    def connection(self, write=False):
+    def connection(self, write: bool = False) -> Iterator[DBConnection]:
         """Confirma a transação inteira ou a desfaz; fecha conexões inclusive em falha."""
+        connection: DBConnection
         if self.postgres:
             import psycopg
             from psycopg.rows import dict_row
 
-            options = {"password": os.environ["COTERA_DB_PASSWORD"]} if os.environ.get("COTERA_DB_PASSWORD") else {}
+            options: dict[str, Any] = (
+                {"password": os.environ["COTERA_DB_PASSWORD"]} if os.environ.get("COTERA_DB_PASSWORD") else {}
+            )
             connection = psycopg.connect(self.url, row_factory=dict_row, connect_timeout=10, **options)
         else:
             connection = sqlite3.connect(self.path, timeout=10)
@@ -89,11 +102,11 @@ class Store:
         finally:
             connection.close()
 
-    def execute(self, connection, sql, parameters=()):
+    def execute(self, connection: DBConnection, sql: str, parameters: Sequence[object] = ()) -> DBCursor:
         """Adapta placeholders de instruções estáticas; não recebe SQL de usuários."""
         return connection.execute(sql.replace("?", "%s") if self.postgres else sql, parameters)
 
-    def create(self, request: PurchaseRequest):
+    def create(self, request: PurchaseRequest) -> dict[str, Any]:
         """Cria uma cesta imutável na versão inicial 1."""
         identifier, created = uuid4().hex, now()
         with self.connection(write=True) as connection:
@@ -104,7 +117,7 @@ class Store:
             )
         return self.get(identifier)
 
-    def list(self):
+    def list(self) -> list[dict[str, Any]]:
         """Lista cestas por criação, sem carregar os textos de propostas."""
         with self.connection() as connection:
             rows = self.execute(connection, "SELECT * FROM purchases ORDER BY created_at DESC, id").fetchall()
@@ -113,7 +126,7 @@ class Store:
             for row in rows
         ]
 
-    def get(self, identifier):
+    def get(self, identifier: str) -> dict[str, Any]:
         """Lê uma fotografia consistente da cesta, propostas e decisões, e recalcula a comparação."""
         with self.connection(write=True) as connection:
             if self.postgres:
@@ -142,7 +155,9 @@ class Store:
             ],
         }
 
-    def add_proposal(self, identifier, document: Document, draft: QuoteDraft, extraction: dict):
+    def add_proposal(
+        self, identifier: str, document: Document, draft: QuoteDraft, extraction: dict[str, Any]
+    ) -> dict[str, Any]:
         """Verifica evidências e insere uma proposta; reenvio dos mesmos bytes é idempotente."""
         verify_evidence(draft, document)
         proposal_id, created = uuid4().hex, now()
@@ -166,9 +181,14 @@ class Store:
             ).fetchone()
             if existing:
                 return {"id": existing["id"], "created": False}
-            count = self.execute(
-                connection, "SELECT COUNT(*) AS n FROM proposals WHERE purchase_id=?", (identifier,)
-            ).fetchone()["n"]
+            # COUNT sem GROUP BY sempre retorna uma linha, inclusive para zero propostas.
+            count_row = cast(
+                sqlite3.Row | dict[str, Any],
+                self.execute(
+                    connection, "SELECT COUNT(*) AS n FROM proposals WHERE purchase_id=?", (identifier,)
+                ).fetchone(),
+            )
+            count = count_row["n"]
             if count >= 10:
                 raise ValueError("Limite de dez propostas por cotação atingido.")
             self.execute(
@@ -179,7 +199,7 @@ class Store:
             self.execute(connection, "UPDATE purchases SET version=version+1 WHERE id=?", (identifier,))
         return {"id": proposal_id, "created": True}
 
-    def decide(self, identifier, decision: Decision):
+    def decide(self, identifier: str, decision: Decision) -> dict[str, Any]:
         """Registra escolha somente de proposta elegível e sobre a versão exibida.
 
         O compare-and-swap impede que uma proposta concorrente fique fora da

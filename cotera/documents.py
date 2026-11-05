@@ -7,7 +7,7 @@ from decimal import Decimal, InvalidOperation
 from hashlib import sha256
 from io import BytesIO
 from pathlib import Path
-from typing import Literal
+from typing import Any, Literal
 
 from pypdf import PdfReader
 
@@ -51,7 +51,7 @@ class Document:
     lines: list[str]
     pages: list[PageProvenance] = dataclass_field(default_factory=list)
 
-    def to_dict(self):
+    def to_dict(self) -> dict[str, Any]:
         """Serializa a evidência mantida junto da proposta."""
         return asdict(self)
 
@@ -62,7 +62,8 @@ def read_document(content: bytes, filename: str) -> Document:
     if not content or len(content) > MAX_BYTES:
         raise ValueError("Envie um arquivo não vazio de até 2 MB.")
     suffix = Path(name).suffix.lower()
-    methods, confidences = [], []
+    methods: list[Literal["texto", "ocr"]] = []
+    confidences: list[float | None] = []
     if suffix == ".txt":
         try:
             text = content.decode("utf-8-sig")
@@ -100,7 +101,8 @@ def read_document(content: bytes, filename: str) -> Document:
             raise ValueError("Não foi possível ler este PDF.") from error
     else:
         raise ValueError("Envie um PDF com texto selecionável ou um TXT.")
-    lines, pages = [], []
+    lines: list[str] = []
+    pages: list[PageProvenance] = []
     for index, fragment in enumerate(fragments):
         start = len(lines) + 1
         page_lines = [line.strip() for line in fragment.splitlines() if line.strip()]
@@ -133,7 +135,9 @@ MONEY_FIELDS = {"freight", "discount", "reported_total"}
 
 def extract_template(document: Document) -> QuoteDraft:
     """Interpreta somente o modelo rotulado incluído no projeto; não usa IA."""
-    payload = {"items": [], "evidence": {}}
+    # Entrada heterogênea; o contrato Pydantic valida cada campo abaixo.
+    payload: dict[str, Any] = {"items": [], "evidence": {}}
+    value: Decimal | int | str
     for number, line in enumerate(document.lines, 1):
         for label, field in ROOT_FIELDS.items():
             if line.startswith(label + ":"):
@@ -168,14 +172,14 @@ def extract_template(document: Document) -> QuoteDraft:
     return draft
 
 
-def verify_evidence(draft: QuoteDraft, document: Document):
+def verify_evidence(draft: QuoteDraft, document: Document) -> None:
     """Exige ocorrência literal de cada valor na linha citada, sem provar sua semântica.
 
     Números são comparados após leitura no formato brasileiro. A correspondência
     literal não garante que um LLM associou o número à coluna correta.
     """
 
-    def check(value, line, numeric=False):
+    def check(value: str | Decimal | int | None, line: int | None, numeric: bool = False) -> None:
         if value is None:
             if line is not None:
                 raise ValueError("Campo ausente com referência inconsistente.")

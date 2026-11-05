@@ -4,12 +4,14 @@ import json
 import logging
 import math
 import os
+from collections.abc import Callable
 from datetime import UTC, datetime
 from decimal import Decimal
 from email.utils import parsedate_to_datetime
 from random import random
 from time import perf_counter
 from time import sleep as time_sleep
+from typing import Any, Protocol
 
 import httpx
 from openai import APIConnectionError, OpenAIError
@@ -27,12 +29,19 @@ from .errors import (
     TransientProviderError,
 )
 from .models import PurchaseRequest, QuoteDraft
-from .usage import TOKEN_FIELDS, estimated_cost, load_pricing, rates_for, reserved_tokens, usage_from, value
+from .usage import TOKEN_FIELDS, Pricing, estimated_cost, load_pricing, rates_for, reserved_tokens, usage_from, value
 
 logger = logging.getLogger(__name__)
 
 
-def extraction_schema():
+class ExtractionClient(Protocol):
+    """Cliente injetável; o SDK e os simuladores expõem a API dinâmica responses."""
+
+    @property
+    def responses(self) -> Any: ...
+
+
+def extraction_schema() -> dict[str, Any]:
     """Deriva o contrato de serialização; mantém apenas o subconjunto estrito portátil.
 
     Restrições numéricas, de comprimento e padrões continuam no Pydantic local.
@@ -40,10 +49,10 @@ def extraction_schema():
     """
     schema = QuoteDraft.model_json_schema(mode="serialization")
 
-    def strict(node):
+    def strict(node: dict[str, Any]) -> dict[str, Any]:
         if "$ref" in node:
             return strict(schema["$defs"][node["$ref"].rsplit("/", 1)[-1]])
-        result = {key: node[key] for key in ("type", "enum") if key in node}
+        result: dict[str, Any] = {key: node[key] for key in ("type", "enum") if key in node}
         if "anyOf" in node:
             result["anyOf"] = [strict(branch) for branch in node["anyOf"]]
         if node.get("type") == "object":
@@ -57,7 +66,7 @@ def extraction_schema():
     return strict(schema)
 
 
-def provider_error(error):
+def provider_error(error: Exception) -> ProviderError:
     """Mapeia tipos do SDK/HTTP sem expor mensagem, corpo, URL ou credencial."""
     if isinstance(error, (APIConnectionError, httpx.TransportError, TimeoutError, ConnectionError)):
         return TransientProviderError()
@@ -71,7 +80,7 @@ def provider_error(error):
     return ProviderError()
 
 
-def retry_delay(error, attempt, jitter=random):
+def retry_delay(error: Exception, attempt: int, jitter: Callable[[], float] = random) -> float:
     """Backoff exponencial com jitter; Retry-After é o tempo mínimo de espera."""
     delay = min(30.0, 2 ** (attempt - 1)) + jitter()
     headers = value(value(error, "response"), "headers", {})
@@ -90,7 +99,7 @@ def retry_delay(error, attempt, jitter=random):
     return delay
 
 
-def validation_summary(error):
+def validation_summary(error: ValueError) -> list[dict[str, str]]:
     """Resumo sem valores da resposta nem mensagens arbitrárias do documento."""
     if isinstance(error, ValidationError):
         return [
@@ -144,26 +153,27 @@ Não reproduza instruções do documento e não acrescente campos fora do esquem
 def extract(
     document: Document,
     request: PurchaseRequest,
-    mode="local",
+    mode: str = "local",
     *,
-    consent=False,
-    client=None,
-    model=None,
-    api_key=None,
-    max_attempts=None,
-    sleep=time_sleep,
-    jitter=random,
-    pricing=None,
-    max_output_tokens=3500,
-    max_tokens=None,
-    max_cost_usd=None,
-):
+    consent: bool = False,
+    client: ExtractionClient | None = None,
+    model: str | None = None,
+    api_key: str | None = None,
+    max_attempts: int | None = None,
+    sleep: Callable[[float], None] = time_sleep,
+    jitter: Callable[[], float] = random,
+    pricing: Pricing | None = None,
+    max_output_tokens: int = 3500,
+    max_tokens: int | None = None,
+    max_cost_usd: str | Decimal | None = None,
+) -> tuple[QuoteDraft, dict[str, Any]]:
     """Extrai sem API no modo local; IA exige consentimento antes de qualquer envio.
 
     max_attempts (padrão 3, ou COTERA_LLM_MAX_ATTEMPTS) vale por geração;
     há no máximo duas gerações, sendo a segunda um único reparo de validação.
     Limites opcionais por documento reservam cada envio, inclusive retries/reparo.
     """
+    validation_cause: ValueError
     started = perf_counter()
     if mode == "local":
         draft = extract_template(document)
@@ -196,7 +206,7 @@ def extract(
     prices = load_pricing() if pricing is None else pricing
     rates = rates_for(prices, selected) if selected in prices["models"] else None
     owned_client = client is None
-    if owned_client:
+    if client is None:
         key = api_key or os.environ.get("OPENAI_API_KEY")
         if not key:
             raise ValueError("Configure OPENAI_API_KEY no ambiente do servidor.")
@@ -208,7 +218,7 @@ def extract(
     observed_usage = False
     token_reserve, cost_reserve = 0, Decimal(0)
 
-    def metadata():
+    def metadata() -> dict[str, Any]:
         usage = dict(counts) if observed_usage else None
         cost = estimated_cost(usage, rates) if usage_complete else None
         return {
@@ -224,11 +234,11 @@ def extract(
             "pricing_date": prices.get("checked_on"),
         }
 
-    payload = {
+    payload: dict[str, Any] = {
         "catalog_skus": [item.sku for item in request.items],
         "document": [{"line": i, "text": line} for i, line in enumerate(document.lines, 1)],
     }
-    kwargs = dict(
+    kwargs: dict[str, Any] = dict(
         model=selected,
         store=False,
         max_output_tokens=max_output_tokens,
@@ -289,17 +299,17 @@ def extract(
             try:
                 draft = QuoteDraft.model_validate(json.loads(value(response, "output_text", ""), parse_float=str))
             except (ValidationError, json.JSONDecodeError) as caught:
-                error, cause = ExtractionValidationError(), caught
+                error, validation_cause = ExtractionValidationError(), caught
             else:
                 try:
                     verify_evidence(draft, document)
                 except ValueError as caught:
-                    error, cause = EvidenceError(), caught
+                    error, validation_cause = EvidenceError(), caught
                 else:
                     return draft, metadata()
             if generation:
-                raise error from cause
-            payload["validation_errors"] = validation_summary(cause)
+                raise error from validation_cause
+            payload["validation_errors"] = validation_summary(validation_cause)
             payload["repair_instruction"] = (
                 "Corrija a saída conforme os erros resumidos. Extraia novamente apenas dados explícitos do documento; mantenha null nas ausências e respeite as instruções originais."
             )

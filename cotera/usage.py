@@ -4,16 +4,26 @@ import json
 import os
 from decimal import Decimal
 from pathlib import Path
+from typing import Any, TypedDict
+
+
+class Pricing(TypedDict):
+    """Campos da tabela de preços consumidos pela extração."""
+
+    models: dict[str, dict[str, str]]
+    checked_on: str
+
 
 PRICING_PATH = Path(__file__).with_name("llm_pricing.json")
 TOKEN_FIELDS = ("input_tokens", "output_tokens", "cached_input_tokens", "reasoning_tokens")
 
 
-def value(obj, name, default=None):
+# A resposta do SDK e os clientes simulados expõem atributos ou dicionários.
+def value(obj: Any, name: str, default: Any = None) -> Any:
     return obj.get(name, default) if isinstance(obj, dict) else getattr(obj, name, default)
 
 
-def usage_from(response):
+def usage_from(response: Any) -> dict[str, int] | None:
     usage = value(response, "usage")
     if usage is None:
         return None
@@ -30,13 +40,13 @@ def usage_from(response):
     return counts
 
 
-def load_pricing(path=None):
+def load_pricing(path: str | Path | None = None) -> Pricing:
     return json.loads(
         Path(path or os.environ.get("COTERA_LLM_PRICING_PATH") or PRICING_PATH).read_text(encoding="utf-8")
     )
 
 
-def rates_for(pricing, model):
+def rates_for(pricing: Pricing, model: str) -> dict[str, str]:
     rates = pricing["models"][model]
     if not {"input", "output"} <= rates.keys():
         raise ValueError("Informe os preços de entrada e saída.")
@@ -48,7 +58,7 @@ def rates_for(pricing, model):
     return rates
 
 
-def estimated_cost(usage, rates):
+def estimated_cost(usage: dict[str, int] | None, rates: dict[str, str] | None) -> Decimal | None:
     if usage is None or rates is None:
         return None
     cached = usage.get("cached_input_tokens", 0)
@@ -58,6 +68,6 @@ def estimated_cost(usage, rates):
     return (incoming + usage["output_tokens"] * Decimal(rates["output"])) / Decimal(1_000_000)
 
 
-def reserved_tokens(kwargs):
+def reserved_tokens(kwargs: dict[str, Any]) -> int:
     """Limite conservador por bytes UTF-8, incluindo schema, instruções e framing."""
     return len(json.dumps(kwargs, ensure_ascii=False).encode("utf-8")) + 4096 + kwargs["max_output_tokens"]

@@ -6,24 +6,27 @@ from pathlib import Path
 from .documents import read_document
 from .extraction import extract
 from .models import PurchaseRequest
+from .store import Store
 
 DATA = Path(__file__).resolve().parents[1] / "data"
 DEMO_TITLE = "Reposição do escritório · demonstração"
 
 
-def demo_request():
+def demo_request() -> PurchaseRequest:
     """Cesta fixa de vinte resmas, cinquenta canetas e dez organizadores."""
-    return PurchaseRequest(
-        title=DEMO_TITLE,
-        items=[
-            {"sku": "PAP-A4", "description": "Papel A4 · resma de 500 folhas", "quantity": "20", "unit": "un"},
-            {"sku": "CAN-AZ", "description": "Caneta esferográfica azul", "quantity": "50", "unit": "un"},
-            {"sku": "ORG-M", "description": "Organizador de mesa", "quantity": "10", "unit": "un"},
-        ],
+    return PurchaseRequest.model_validate(
+        dict(
+            title=DEMO_TITLE,
+            items=[
+                {"sku": "PAP-A4", "description": "Papel A4 · resma de 500 folhas", "quantity": "20", "unit": "un"},
+                {"sku": "CAN-AZ", "description": "Caneta esferográfica azul", "quantity": "50", "unit": "un"},
+                {"sku": "ORG-M", "description": "Organizador de mesa", "quantity": "10", "unit": "un"},
+            ],
+        )
     )
 
 
-def seed_demo(store, *, scanned=False):
+def seed_demo(store: Store, *, scanned: bool = False) -> str:
     """Cria a demonstração uma vez; reenvios dos PDFs são deduplicados pelo hash."""
     request = demo_request()
     if scanned:

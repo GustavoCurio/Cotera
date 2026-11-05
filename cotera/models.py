@@ -1,7 +1,7 @@
 """Contratos de compra, extração e decisão; valores monetários usam Decimal."""
 
 from decimal import Decimal
-from typing import Annotated, Literal
+from typing import Annotated, Literal, Self
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
@@ -33,7 +33,7 @@ class PurchaseRequest(Contract):
     max_delivery_days: int | None = Field(default=None, ge=0, le=365)
 
     @model_validator(mode="after")
-    def unique_skus(self):
+    def unique_skus(self) -> Self:
         """Garante que cada código representa um único item da cesta."""
         if len({item.sku for item in self.items}) != len(self.items):
             raise ValueError("A cesta contém códigos de item repetidos.")
