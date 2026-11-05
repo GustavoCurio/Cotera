@@ -39,7 +39,7 @@ def load_cases(manifest_path=DATASET):
         request = PurchaseRequest.model_validate(case['request'])
         semantic = [QuoteItem.model_validate({**i, 'source_line': 1}) for i in case['semantic_items']]
         cases.append({**case, '_document': document, '_expected': expected, '_request': request,
-                      '_semantic': semantic, '_audit': audit_quote(request, expected)})
+                      '_semantic': semantic, '_audit': audit_quote(request, expected, document)})
     if not cases:
         raise ValueError('Dataset vazio.')
     return cases
@@ -93,7 +93,7 @@ def evaluate_case(case, mode='local', *, client=None, model=None, budget=None, r
     status = 'accepted'
     try:
         draft, _ = extract(case['_document'], case['_request'], mode=mode, consent=mode == 'ai', client=observer, model=model)
-        audit = audit_quote(case['_request'], draft)
+        audit = audit_quote(case['_request'], draft, case['_document'])
     except (ProviderError, ValueError) as error:
         status = failure_category(error, observer)
     elapsed = round((perf_counter() - started) * 1000, 3)
@@ -107,7 +107,8 @@ def evaluate_case(case, mode='local', *, client=None, model=None, budget=None, r
     usage = observer.usage if observer else {'input_tokens': 0, 'output_tokens': 0, 'cached_input_tokens': 0}
     cost = str(observer.cost) if observer and observer.cost is not None else ('0' if mode == 'local' else None)
     return {'id': case['id'], 'document': case['document'], 'sha256': case['_document'].sha256,
-            'layout': case['layout'], 'tags': case['tags'], 'status': status, 'attempted': attempted,
+            'layout': case['layout'], 'tags': case['tags'], 'document_pages': case['_document'].to_dict()['pages'],
+            'status': status, 'attempted': attempted,
             'elapsed_ms': elapsed if attempted else None, 'usage': usage, 'estimated_cost_usd': cost,
             'response_model': getattr(observer.response, 'model', None) if observer else None,
             'draft': draft.model_dump(mode='json') if draft else None,
@@ -159,7 +160,8 @@ def run_evaluation(manifest_path=DATASET, *, models=(), clients=None, pricing=No
                 'Injecao: resistencia estrita exige extracao aceita e todos os valores corretos; rejeicoes sao registradas separadamente. Valores-alvo sao inspecionados mesmo em respostas rejeitadas. Quatro ataques nao demonstram seguranca geral.',
                 'Latencia inclui chamada, validacao e evidencia (sem leitura do arquivo); p50 e mediana, p95 nearest-rank. Sem aquecimento, retries ou repeticoes; amostra pequena.',
                 'Tokens e custos sao observados por documento, inclusive quando a validacao falha. Usage ausente permanece null. Estimativas nao substituem a fatura. Baseline local nao usa tokens nem API.',
-                'Dataset sintetico de desenvolvimento, sem validacao externa ou estimativa de ganhos em producao. O verificador atual nao suporta en_US; esses casos permanecem no denominador.'
+                'Dataset sintetico de desenvolvimento, sem validacao externa ou estimativa de ganhos em producao. O verificador atual nao suporta en_US; esses casos permanecem no denominador.',
+                'Quando ha OCR, document_pages registra metodo e confianca media por pagina; expected_audit e observed_audit sinalizam revisao humana. A latencia de extracao nao inclui renderizacao/OCR, feitos durante a leitura do dataset. Confianca OCR nao e probabilidade de acerto dos valores.'
             ]}
 
 

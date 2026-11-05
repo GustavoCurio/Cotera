@@ -32,9 +32,11 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
           cache: pip
+      - run: sudo apt-get update && sudo apt-get install -y tesseract-ocr tesseract-ocr-por
       - run: python -m pip install -r requirements-dev.txt
       - run: python -m pytest -q
       - run: python -m cotera evaluate --output reports/ci-evaluation.json
       # Dataset e métricas de IA são testados com cliente simulado pela suíte.
       # A baseline não constrói cliente OpenAI, mesmo se houver chave no ambiente.
       - run: python -m evals.run_llm_eval --baseline-only --output reports/ci-llm-evaluation.json
+      - run: python -m evals.run_llm_eval --baseline-only --manifest evals/llm/scanned/manifest.json --output reports/ci-ocr-evaluation.json

@@ -1,0 +1,208 @@
+{
+  "version": 1,
+  "description": "Dois exemplos fictícios escaneados; avaliação complementar local com OCR por+eng.",
+  "cases": [
+    {
+      "id": "aurora_escaneada",
+      "document": "aurora_escaneada.pdf",
+      "source_text": "aurora_escaneada.source.txt",
+      "layout": "cotera_escaneado",
+      "tags": [
+        "ocr",
+        "pt_BR",
+        "BRL"
+      ],
+      "request": {
+        "title": "Cesta fictícia para OCR",
+        "items": [
+          {
+            "sku": "PAP-A4",
+            "description": "Papel A4 fictício",
+            "quantity": "20",
+            "unit": "un"
+          },
+          {
+            "sku": "CAN-AZ",
+            "description": "Caneta fictícia",
+            "quantity": "50",
+            "unit": "un"
+          },
+          {
+            "sku": "ORG-M",
+            "description": "Organizador fictício",
+            "quantity": "10",
+            "unit": "un"
+          }
+        ]
+      },
+      "expected": {
+        "supplier": "Aurora Suprimentos",
+        "reference": "AUR-2401",
+        "currency": "BRL",
+        "delivery_days": 5,
+        "freight": "45.00",
+        "discount": "0.00",
+        "reported_total": "1405.00",
+        "items": [
+          {
+            "sku": "PAP-A4",
+            "quantity": "20",
+            "unit": "un",
+            "unit_price": "32.00",
+            "source_line": 10
+          },
+          {
+            "sku": "CAN-AZ",
+            "quantity": "50",
+            "unit": "un",
+            "unit_price": "3.20",
+            "source_line": 11
+          },
+          {
+            "sku": "ORG-M",
+            "quantity": "10",
+            "unit": "un",
+            "unit_price": "56.00",
+            "source_line": 12
+          }
+        ],
+        "evidence": {
+          "supplier": 2,
+          "reference": 3,
+          "currency": 4,
+          "delivery_days": 5,
+          "freight": 6,
+          "discount": 7,
+          "reported_total": 8
+        }
+      },
+      "semantic_items": [
+        {
+          "sku": "PAP-A4",
+          "quantity": "20",
+          "unit": "un",
+          "unit_price": "32.00"
+        },
+        {
+          "sku": "CAN-AZ",
+          "quantity": "50",
+          "unit": "un",
+          "unit_price": "3.20"
+        },
+        {
+          "sku": "ORG-M",
+          "quantity": "10",
+          "unit": "un",
+          "unit_price": "56.00"
+        }
+      ],
+      "injection": null,
+      "evidence_supported": true,
+      "notes": [
+        "PDF só-imagem; gabarito documental independente do OCR. Confiança e texto podem variar entre versões do Tesseract."
+      ]
+    },
+    {
+      "id": "prumo_ruido_rotacao",
+      "document": "prumo_ruido_rotacao.pdf",
+      "source_text": "prumo_ruido_rotacao.source.txt",
+      "layout": "cotera_escaneado",
+      "tags": [
+        "ocr",
+        "pt_BR",
+        "BRL",
+        "ruido",
+        "rotacao"
+      ],
+      "request": {
+        "title": "Cesta fictícia para OCR",
+        "items": [
+          {
+            "sku": "PAP-A4",
+            "description": "Papel A4 fictício",
+            "quantity": "20",
+            "unit": "un"
+          },
+          {
+            "sku": "CAN-AZ",
+            "description": "Caneta fictícia",
+            "quantity": "50",
+            "unit": "un"
+          },
+          {
+            "sku": "ORG-M",
+            "description": "Organizador fictício",
+            "quantity": "10",
+            "unit": "un"
+          }
+        ]
+      },
+      "expected": {
+        "supplier": "Prumo Distribuidora",
+        "reference": "PRU-8810",
+        "currency": "BRL",
+        "delivery_days": 8,
+        "freight": "0.00",
+        "discount": "20.00",
+        "reported_total": "1320.00",
+        "items": [
+          {
+            "sku": "PAP-A4",
+            "quantity": "20",
+            "unit": "un",
+            "unit_price": "31.00",
+            "source_line": 10
+          },
+          {
+            "sku": "CAN-AZ",
+            "quantity": "50",
+            "unit": "un",
+            "unit_price": "2.80",
+            "source_line": 11
+          },
+          {
+            "sku": "ORG-M",
+            "quantity": "10",
+            "unit": "un",
+            "unit_price": "58.00",
+            "source_line": 12
+          }
+        ],
+        "evidence": {
+          "supplier": 2,
+          "reference": 3,
+          "currency": 4,
+          "delivery_days": 5,
+          "freight": 6,
+          "discount": 7,
+          "reported_total": 8
+        }
+      },
+      "semantic_items": [
+        {
+          "sku": "PAP-A4",
+          "quantity": "20",
+          "unit": "un",
+          "unit_price": "31.00"
+        },
+        {
+          "sku": "CAN-AZ",
+          "quantity": "50",
+          "unit": "un",
+          "unit_price": "2.80"
+        },
+        {
+          "sku": "ORG-M",
+          "quantity": "10",
+          "unit": "un",
+          "unit_price": "58.00"
+        }
+      ],
+      "injection": null,
+      "evidence_supported": true,
+      "notes": [
+        "PDF só-imagem; gabarito documental independente do OCR. Confiança e texto podem variar entre versões do Tesseract."
+      ]
+    }
+  ]
+}

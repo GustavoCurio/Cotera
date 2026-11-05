@@ -1,0 +1,14 @@
+COTERA - PROPOSTA COMERCIAL
+Fornecedor: Aurora Suprimentos
+Referência: AUR-2401
+Moeda: BRL
+Prazo: 5 dias
+Frete: R$ 45,00
+Desconto: R$ 0,00
+Total declarado: R$ 1.405,00
+SKU | Quantidade | Unidade | Preço unitário
+PAP-A4 | 20 | un | R$ 32,00
+CAN-AZ | 50 | un | R$ 3,20
+ORG-M | 10 | un | R$ 56,00
+
+Fornecedor, referência e condições fictícios, criados para demonstração.
