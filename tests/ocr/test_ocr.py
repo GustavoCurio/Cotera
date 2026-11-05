@@ -23,15 +23,6 @@ from scripts.create_scanned_samples import generate, generate_evaluation
 SCANNED = DATA / "scanned"
 
 
-@pytest.fixture(scope="module")
-def require_ocr():
-    pytest.importorskip("pytesseract")
-    pytest.importorskip("pypdfium2")
-    if not shutil.which("tesseract"):
-        pytest.skip("OCR real requer Tesseract local.")
-    probe = subprocess.run(["tesseract", "--list-langs"], capture_output=True, text=True, timeout=5)
-    if not {"por", "eng"}.issubset(set(probe.stdout.splitlines())):
-        pytest.skip("OCR real requer os idiomas por+eng.")
 
 
 def pdf_bytes(*paths, blank=False):
@@ -45,6 +36,7 @@ def pdf_bytes(*paths, blank=False):
     return output.getvalue()
 
 
+@pytest.mark.slow
 def test_scanned_fixtures_are_image_only_and_reproducible(tmp_path):
     generate(tmp_path)
     first = {p.name: p.read_bytes() for p in tmp_path.glob("*.pdf")}
@@ -60,6 +52,8 @@ def test_scanned_fixtures_are_image_only_and_reproducible(tmp_path):
         assert path.read_bytes() == (DATA.parent / "evals" / "llm" / "scanned" / path.name).read_bytes()
 
 
+@pytest.mark.ocr
+@pytest.mark.slow
 @pytest.mark.parametrize("name,supplier,total", [
     ("aurora_escaneada.pdf", "Aurora Suprimentos", "1405.00"),
     ("prumo_ruido_rotacao.pdf", "Prumo Distribuidora", "1320.00"),
@@ -99,6 +93,8 @@ def test_ocr_local_parser_persistence_evidence_and_human_review(require_ocr, tmp
     assert store.decide(identifier, decision)["ocr_reviewed"] is True
 
 
+@pytest.mark.ocr
+@pytest.mark.slow
 def test_scanned_blank_remains_rejected(require_ocr):
     path = SCANNED / "branco_escaneado.pdf"
     with pytest.raises(ValueError, match="sem texto selecionável"):
@@ -118,6 +114,8 @@ def test_native_pdf_does_not_call_ocr_and_old_documents_still_compare(monkeypatc
     assert not audit_quote(demo_request(), extract_template(doc), legacy)["requires_human_review"]
 
 
+@pytest.mark.ocr
+@pytest.mark.slow
 def test_mixed_pdf_only_scanned_page_uses_ocr_and_lines_remain_global(require_ocr, monkeypatch):
     indexes_seen = []
     original = documents.read_scanned_pages
@@ -136,6 +134,8 @@ def test_mixed_pdf_only_scanned_page_uses_ocr_and_lines_remain_global(require_oc
     assert "Prumo" in "\n".join(doc.lines[second.start_line - 1:second.end_line])
 
 
+@pytest.mark.ocr
+@pytest.mark.slow
 def test_sparse_native_header_still_triggers_ocr(require_ocr):
     from reportlab.pdfgen.canvas import Canvas
     buffer = BytesIO()
@@ -228,6 +228,8 @@ def test_ocr_output_obeys_the_same_text_limits(monkeypatch, text):
         read_document(path.read_bytes(), path.name)
 
 
+@pytest.mark.ocr
+@pytest.mark.slow
 def test_scanned_baseline_uses_ocr_without_constructing_openai(require_ocr, tmp_path, monkeypatch):
     from evals import run_llm_eval as runner
     def forbidden(*args, **kwargs):
@@ -246,6 +248,8 @@ def test_scanned_baseline_uses_ocr_without_constructing_openai(require_ocr, tmp_
         assert case["observed_audit"]["requires_human_review"]
 
 
+@pytest.mark.ocr
+@pytest.mark.slow
 def test_api_ocr_requires_review_before_decision(require_ocr, tmp_path, monkeypatch):
     store = Store("sqlite:///" + str(tmp_path / "api.sqlite3"))
     monkeypatch.setattr(api, "store", lambda: store)
@@ -262,6 +266,8 @@ def test_api_ocr_requires_review_before_decision(require_ocr, tmp_path, monkeypa
         assert client.post(route + "/decisions", json={**body, "ocr_reviewed": True}).status_code == 201
 
 
+@pytest.mark.ocr
+@pytest.mark.slow
 def test_streamlit_scanned_example_confidence_and_review(require_ocr, tmp_path, monkeypatch):
     monkeypatch.setenv("COTERA_DEMO_HOME", str(tmp_path))
     monkeypatch.delenv("OPENAI_API_KEY", raising=False)

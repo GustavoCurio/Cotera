@@ -20,9 +20,6 @@ from cotera.models import QuoteDraft
 from cotera.usage import estimated_cost, usage_from
 
 
-@pytest.fixture
-def document():
-    return read_document((DATA / 'proposals/aurora.txt').read_bytes(), 'aurora.txt')
 
 
 def response(payload, *, usage=True, **kwargs):
